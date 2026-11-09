@@ -1,6 +1,9 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "../third_party/stb_image.h"
+
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -14,6 +17,62 @@
 
 namespace {
 constexpr double PI = 3.14159265358979323846;
+
+struct PlanetTexture { GLuint id = 0; int width = 0; int height = 0; };
+
+GLuint loadTexture(const std::string& path) {
+    int width = 0, height = 0, channels = 0;
+    stbi_uc* pixels = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb);
+    if (!pixels) {
+        std::cerr << "Texture unavailable: " << path << " (" << stbi_failure_reason() << ")\\n";
+        return 0;
+    }
+    GLuint texture = 0;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    stbi_image_free(pixels);
+    return texture;
+}
+
+void drawTexturedSphere(float x, float y, float radius, GLuint texture,
+                        float rotation, float tint = 1.0f) {
+    if (!texture) return;
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glColor4f(tint, tint, tint, 1.0f);
+    constexpr int slices = 48;
+    constexpr int stacks = 32;
+    for (int stack = 0; stack < stacks; ++stack) {
+        const float lat0 = static_cast<float>(-PI * 0.5 + PI * stack / stacks);
+        const float lat1 = static_cast<float>(-PI * 0.5 + PI * (stack + 1) / stacks);
+        glBegin(GL_QUAD_STRIP);
+        for (int slice = 0; slice <= slices; ++slice) {
+            const float u = static_cast<float>(slice) / slices;
+            const float lon = u * static_cast<float>(2.0 * PI) + rotation;
+            for (int row = 0; row < 2; ++row) {
+                const float lat = row == 0 ? lat0 : lat1;
+                const float nx = std::cos(lat) * std::cos(lon);
+                const float ny = std::sin(lat);
+                const float nz = std::cos(lat) * std::sin(lon);
+                const float light = 0.22f + 0.78f * std::max(0.0f, nx * -0.42f + ny * 0.18f + nz * 0.89f);
+                glColor4f(tint * light, tint * light, tint * light, 1.0f);
+                glTexCoord2f(u, row == 0 ? static_cast<float>(stack) / stacks
+                                          : static_cast<float>(stack + 1) / stacks);
+                glVertex3f(x + radius * nx, y + radius * ny, radius * nz);
+            }
+        }
+        glEnd();
+    }
+    glDisable(GL_TEXTURE_2D);
+}
 
 struct Star {
     float x, y, brightness, size;
@@ -208,9 +267,9 @@ void drawSagittariusA(float time) {
 
 void drawGalaxy(float time, float aspect) {
     // The arm structure rotates clockwise slowly around a stable galactic center.
-    const float rotation = -time * 0.018f;
+    const float rotation = -time * 0.055f;
     const float maxRadius = 0.86f;
-    const float galaxyXScale = std::max(1.0f, aspect * 0.92f);
+    const float galaxyXScale = std::max(1.0f, aspect * 0.98f);
     const float pitch = 0.31f;
     const int arms = 4;
 
@@ -226,10 +285,10 @@ void drawGalaxy(float time, float aspect) {
     glPointSize(2.0f);
     glBegin(GL_POINTS);
     for (int arm = 0; arm < arms; ++arm) {
-        const float base = static_cast<float>(2.0 * PI * arm / arms);
+        const float base = static_cast<float>(2.0 * PI * arm / arms) + static_cast<float>(PI * 0.25);
         for (int i = 0; i < 2400; ++i) {
             const float u = static_cast<float>(i) / 2399.0f;
-            const float radius = 0.075f + u * (maxRadius - 0.075f);
+            const float radius = 0.065f + u * (maxRadius - 0.065f);
             const float angle = base + std::log(radius / 0.075f) / pitch + rotation;
             const float scatter = std::sin(i * 12.9898f + arm * 78.233f) * 0.012f;
             const float r = radius + scatter;
@@ -238,7 +297,7 @@ void drawGalaxy(float time, float aspect) {
             const float fade = 1.0f - u * 0.52f;
             const float dust = 0.5f + 0.5f * std::sin(i * 0.071f + arm);
             glColor4f(0.36f + 0.28f * dust, 0.43f + 0.25f * dust,
-                      0.92f, 0.08f * fade);
+                      0.92f, 0.17f * fade);
             glVertex2f(x * galaxyXScale, y);
         }
     }
@@ -291,17 +350,17 @@ void drawGalaxy(float time, float aspect) {
     glEnd();
 }
 
-void drawSunAndPlanets(double time, double speed, float aspect) {
+void drawSunAndPlanets(double time, double speed, float aspect, const std::array<GLuint, 9>& textures) {
     // Keep the Sun physically attached to the Orion Spur: it shares the
     // galaxy's rotation and sits directly on the spur's centerline at r=0.66.
     // There is deliberately no separate circular orbit or detached golden trail.
-    const float galaxyRotation = -static_cast<float>(time * 0.018);
+    const float galaxyRotation = -static_cast<float>(time * 0.055);
     constexpr float sunRadius = 0.66f;
     const float spurAngle = 2.35f + galaxyRotation;
-    const float sunX = std::cos(spurAngle) * sunRadius * std::max(1.0f, aspect * 0.92f);
+    const float sunX = std::cos(spurAngle) * sunRadius * std::max(1.0f, aspect * 0.98f);
     const float sunY = std::sin(spurAngle) * sunRadius;
 
-    // A soft gravitational field: nested, subtly distorted contours around the Sun.
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);\n\n    // A soft gravitational field: nested, subtly distorted contours around the Sun.
     for (int layer = 12; layer >= 1; --layer) {
         const float r = 0.055f + layer * 0.018f;
         glColor4f(1.0f, 0.55f, 0.16f, 0.010f + (12 - layer) * 0.0015f);
@@ -349,7 +408,7 @@ void drawSunAndPlanets(double time, double speed, float aspect) {
 
     for (std::size_t index = 0; index < std::size(planets); ++index) {
         const auto& p = planets[index];
-        const float pr = p.radius * 1.55f;
+        const float pr = p.radius * 2.2f;
         const double a = p.phase + time * p.speed * speed;
         const float eccentric = 1.0f - p.eccentricity * std::cos(static_cast<float>(a));
         const float orbitX = p.orbit * 1.25f * eccentric;
@@ -382,51 +441,15 @@ void drawSunAndPlanets(double time, double speed, float aspect) {
         }
         glowLine(planetWake, p.r, p.g, p.b, 0.42f, 1.2f);
 
-        // Planet halo, shaded disc, and a small illuminated crescent.
-        glColor4f(p.r, p.g, p.b, 0.14f);
-        circle(px, py, pr * 2.5f, 32);
-        glColor4f(p.r * 0.42f, p.g * 0.42f, p.b * 0.48f, 1.0f);
-        circle(px, py, pr * 1.35f, 40);
-        glColor4f(p.r, p.g, p.b, 1.0f);
-        circle(px - pr * 0.18f, py + pr * 0.16f,
-               pr * 0.78f, 36);
-        // Procedural surface markings give each world a recognizable character.
-        if (index == 0) {
-            glColor4f(0.18f, 0.20f, 0.23f, 0.72f);
-            circle(px + pr * 0.20f, py - pr * 0.18f, pr * 0.23f, 20);
-            ring(px + pr * 0.20f, py - pr * 0.18f, pr * 0.23f, 0.86f, 0.79f, 0.67f, 0.55f);
-        } else if (index == 1 || index == 3) {
-            glColor4f(index == 1 ? 1.0f : 0.52f, index == 1 ? 0.78f : 0.20f,
-                      index == 1 ? 0.42f : 0.12f, 0.58f);
-            circle(px + pr * 0.20f, py + pr * 0.05f, pr * 0.28f, 24);
-            glColor4f(0.20f, 0.12f, 0.09f, 0.55f);
-            circle(px - pr * 0.22f, py - pr * 0.20f, pr * 0.13f, 18);
-            ring(px - pr * 0.22f, py - pr * 0.20f, pr * 0.13f, 0.95f, 0.72f, 0.48f, 0.50f);
-        } else if (index == 2) {
-            glColor4f(0.10f, 0.62f, 0.30f, 0.92f);
-            circle(px + pr * 0.18f, py + pr * 0.10f, pr * 0.40f, 24);
-            glColor4f(0.16f, 0.72f, 0.38f, 0.88f);
-            circle(px - pr * 0.28f, py - pr * 0.18f, pr * 0.23f, 20);
-            glColor4f(0.92f, 0.97f, 1.0f, 0.70f);
-            circle(px - pr * 0.05f, py + pr * 0.62f, pr * 0.20f, 20);
+        // Render mapped worlds as shaded 3-D spheres, not flat cartoon discs.
+        const GLuint texture = textures[std::min<std::size_t>(index + 1, textures.size() - 1)];
+        if (texture) {
+            drawTexturedSphere(px, py, pr, texture,
+                               static_cast<float>(time * p.speed * speed * 0.18), 1.0f);
         } else {
-            for (int band = -2; band <= 2; ++band) {
-                const float by = py + band * pr * 0.34f;
-                const float half = std::sqrt(std::max(0.0f, 1.0f - std::pow(band * 0.34f, 2.0f)));
-                glLineWidth((index == 4 && band == 0) ? 2.2f : 1.2f);
-                glColor4f(p.r * 0.78f, p.g * 0.78f, p.b * 0.78f, 0.72f);
-                glBegin(GL_LINES);
-                glVertex2f(px - pr * half, by);
-                glVertex2f(px + pr * half, by);
-                glEnd();
-            }
-            glColor4f(0.72f, 0.28f, 0.16f, 0.88f);
-            circle(px + pr * 0.28f, py - pr * 0.18f, pr * 0.17f, 20);
+            glColor4f(p.r * 0.55f, p.g * 0.55f, p.b * 0.55f, 1.0f);
+            circle(px, py, pr, 48);
         }
-        glColor4f(1.0f, 0.96f, 0.84f, 0.78f);
-        circle(px - pr * 0.32f, py + pr * 0.34f,
-               pr * 0.30f, 20);
-
         // Distinctive rings for the gas/ice giants.
         if (p.rings) {
             glLineWidth(2.0f);
@@ -449,7 +472,7 @@ void render(const std::vector<Star>& stars, int width, int height,
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(-aspect, aspect, -1.0, 1.0, -1.0, 1.0);
+    glOrtho(-aspect, aspect, -1.0, 1.0, -2.0, 2.0);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
@@ -463,7 +486,7 @@ void render(const std::vector<Star>& stars, int width, int height,
     drawStars(stars);
     drawGalaxy(static_cast<float>(elapsed), aspect);
     drawSagittariusA(static_cast<float>(elapsed));
-    drawSunAndPlanets(elapsed, speed, aspect);
+    drawSunAndPlanets(elapsed, speed, aspect, textures);
 
     glDisable(GL_BLEND);
 }
@@ -557,6 +580,14 @@ int main(int argc, char** argv) {
     }
     SDL_GL_SetSwapInterval(1);
 
+    const std::array<std::string, 9> textureFiles = {
+        "sun.jpg", "mercury.jpg", "venus.jpg", "earth.jpg", "mars.jpg",
+        "jupiter.jpg", "saturn.jpg", "uranus.jpg", "neptune.jpg"
+    };
+    std::array<GLuint, 9> textures{};
+    for (std::size_t i = 0; i < textureFiles.size(); ++i)
+        textures[i] = loadTexture(std::string("assets/planet-textures/") + textureFiles[i]);
+
     int drawableW = 0, drawableH = 0;
     SDL_GetWindowSizeInPixels(window, &drawableW, &drawableH);
     const auto stars = makeStars(2600,
@@ -600,11 +631,11 @@ int main(int argc, char** argv) {
         if (!paused) accumulated += std::min(delta, 0.1);
 
         SDL_GetWindowSizeInPixels(window, &drawableW, &drawableH);
-        render(stars, drawableW, drawableH, accumulated, speed);
+        render(stars, drawableW, drawableH, accumulated, speed, textures);
         SDL_GL_SwapWindow(window);
     }
 
-    SDL_GL_DestroyContext(context);
+    for (GLuint texture : textures) if (texture) glDeleteTextures(1, &texture);\n    SDL_GL_DestroyContext(context);
     SDL_DestroyWindow(window);
     SDL_Quit();
     return 0;
