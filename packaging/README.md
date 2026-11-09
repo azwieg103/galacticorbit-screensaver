@@ -1,22 +1,21 @@
 # RPM packaging (AlmaLinux 10)
 
-The RPM includes the SDL3/OpenGL preview application, locally installed planetary
-texture maps, and the KDE Plasma 6 wallpaper package. The Plasma wallpaper uses
-the virtual desktop geometry and a shared monotonic animation clock so each
-monitor renders its own slice of one continuous scene.
+The RPM includes the SDL3/OpenGL preview application, planetary texture maps,
+and the KDE Plasma 6 wallpaper plugin. The plugin can be selected specifically
+as the **KScreenLocker background**; it does not replace the secure lock-screen
+shell or password authentication.
 
-Install build dependencies:
+## Install build dependencies
 
 ```bash
-sudo dnf install -y rpm-build rpmdevtools dnf-plugins-core
-sudo dnf install -y epel-release
+sudo dnf install -y epel-release dnf-plugins-core
 sudo dnf config-manager --set-enabled crb
-sudo dnf install -y cmake gcc-c++ make SDL3-devel mesa-libGL-devel \
-  extra-cmake-modules libplasma-devel kf6-kcoreaddons-devel \
-  qt6-qtbase-devel qt6-qtdeclarative-devel qt6-qtshadertools-devel
+sudo dnf install -y rpm-build rpmdevtools cmake gcc-c++ make SDL3-devel \
+  mesa-libGL-devel extra-cmake-modules libplasma-devel kf6-kcoreaddons-devel \
+  qt6-qtbase-devel qt6-qtdeclarative-devel qt6-qtshadertools-devel curl
 ```
 
-Build from the repository root:
+## Build from the repository root
 
 ```bash
 mkdir -p ~/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
@@ -26,17 +25,31 @@ cp packaging/galacticorbit-screensaver.spec ~/rpmbuild/SPECS/
 rpmbuild -ba ~/rpmbuild/SPECS/galacticorbit-screensaver.spec
 ```
 
-Install the resulting package:
+## Install the RPM
 
 ```bash
 sudo dnf install ~/rpmbuild/RPMS/x86_64/galacticorbit-screensaver-*.rpm
 ```
 
-Then open **System Settings → Screen Locking**, select **Galactic Orbit** as
-the wallpaper/background, and keep KDE's normal lock authentication enabled.
+## Select it for the lock screen
+
+1. Open **System Settings → Security & Privacy → Screen Locking** (the
+   category wording may vary slightly by Plasma version).
+2. Find **Appearance** and click **Configure Appearance…**.
+3. Under **Wallpaper Type**, select **Galactic Orbit**.
+4. Apply the change and press **Meta+L** to test.
+
+Do not select it from the desktop's Wallpaper settings; the desktop wallpaper
+and lock-screen background have independent configurations. KDE's normal
+lock-screen controls and password authentication remain enabled.
+
+The plugin is installed under
+`/usr/share/plasma/wallpapers/org.zwiegnet.galacticorbit`, where Plasma's
+wallpaper package loader discovers it. To inspect installed wallpaper packages:
+
+```bash
+kpackagetool6 --type Plasma/Wallpaper --list
+```
+
 The standalone preview can be launched with
 `/usr/bin/galacticorbit-screensaver --windowed`.
-
-The KDE integration is a Plasma 6 wallpaper plugin; it is not a replacement
-for the secure screen locker. On Wayland, the per-output Plasma wallpaper
-instances are used instead of relying on one SDL window spanning outputs.
