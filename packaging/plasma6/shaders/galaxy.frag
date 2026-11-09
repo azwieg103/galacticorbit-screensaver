@@ -125,14 +125,16 @@ void main() {
     c=mix(vec3(0.0012,0.0017,0.0055),c,edge);
 
     // Sagittarius A*: compact dark horizon and small, brilliant tilted accretion ring.
+    // Enlarged Sagittarius A* so its silhouette remains legible across the
+    // physical bezels between the four displays.
     float diskR=length(vec2(p.x,p.y*3.5));
-    float accretion=exp(-pow((diskR-0.024)/0.0042,2.0));
-    c+=vec3(1.0,0.39,0.12)*accretion*1.65;
-    c+=vec3(0.48,0.66,1.0)*exp(-pow((diskR-0.034)/0.0045,2.0))*0.48;
-    float horizon=1.0-smoothstep(0.0085,0.0110,length(p));
+    float accretion=exp(-pow((diskR-0.060)/0.0105,2.0));
+    c+=vec3(1.0,0.39,0.12)*accretion*1.75;
+    c+=vec3(0.48,0.66,1.0)*exp(-pow((diskR-0.085)/0.0115,2.0))*0.55;
+    float horizon=1.0-smoothstep(0.021,0.0275,length(p));
     c=mix(c,vec3(0.00005,0.00004,0.0001),horizon);
-    float photon=exp(-pow((length(p)-0.012)/0.0015,2.0));
-    c+=vec3(1.0,0.82,0.56)*photon*1.05;
+    float photon=exp(-pow((length(p)-0.030)/0.0038,2.0));
+    c+=vec3(1.0,0.82,0.56)*photon*1.15;
 
     // Sun shares the Orion Spur's pattern rotation, with only slight orbital drift.
     float sunAngle=2.35-t+phase*0.010*rotationSpeed;
