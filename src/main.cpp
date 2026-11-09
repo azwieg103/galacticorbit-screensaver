@@ -632,7 +632,10 @@ int main(int argc, char** argv) {
         SDL_GL_SwapWindow(window);
     }
 
-    for (GLuint texture : textures) if (texture) glDeleteTextures(1, &texture);\n    SDL_GL_DestroyContext(context);
+    for (GLuint texture : textures) {
+        if (texture) glDeleteTextures(1, &texture);
+    }
+    SDL_GL_DestroyContext(context);
     SDL_DestroyWindow(window);
     SDL_Quit();
     return 0;
