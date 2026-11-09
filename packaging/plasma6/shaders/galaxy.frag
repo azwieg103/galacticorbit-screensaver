@@ -50,7 +50,7 @@ void main() {
     float accretion = exp(-pow((diskR-0.052)/0.009,2.0));
     c += vec3(1.0,0.36,0.09) * accretion * 1.35;
     c += vec3(0.35,0.58,1.0) * exp(-pow((diskR-0.068)/0.008,2.0)) * 0.35;
-    float horizon = smoothstep(0.026,0.023,length(uv));
+    float horizon = 1.0 - smoothstep(0.023,0.026,length(uv));
     c = mix(c,vec3(0.0002,0.0001,0.0004),horizon);
     float photon = exp(-pow((length(uv)-0.029)/0.0028,2.0));
     c += vec3(1.0,0.78,0.46)*photon*0.8;
