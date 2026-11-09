@@ -22,7 +22,7 @@ struct PlanetTexture { GLuint id = 0; int width = 0; int height = 0; };
 
 GLuint loadTexture(const std::string& path) {
     int width = 0, height = 0, channels = 0;
-    stbi_uc* pixels = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb);
+    stbi_set_flip_vertically_on_load(1);\n    stbi_uc* pixels = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb);
     if (!pixels) {
         std::cerr << "Texture unavailable: " << path << " (" << stbi_failure_reason() << ")\\n";
         return 0;
@@ -236,8 +236,8 @@ void drawLabel(const std::string& label, float x, float y, float scale,
 void drawSagittariusA(float time) {
     // A luminous, tilted accretion disk surrounds a truly dark event horizon.
     for (int layer = 0; layer < 7; ++layer) {
-        const float rx = 0.105f + layer * 0.012f;
-        const float ry = 0.026f + layer * 0.004f;
+        const float rx = 0.155f + layer * 0.020f;
+        const float ry = 0.040f + layer * 0.006f;
         glLineWidth(layer < 2 ? 5.0f : 2.0f);
         glColor4f(1.0f, 0.25f + layer * 0.075f, 0.035f, 0.10f + layer * 0.018f);
         glBegin(GL_LINE_LOOP);
@@ -256,12 +256,12 @@ void drawSagittariusA(float time) {
     // Opaque event horizon cuts through the bright disk.
     glDisable(GL_BLEND);
     glColor4f(0.001f, 0.001f, 0.004f, 1.0f);
-    circle(0.0f, 0.0f, 0.043f, 96);
+    circle(0.0f, 0.0f, 0.082f, 128);
     glEnable(GL_BLEND);
     glColor4f(1.0f, 0.78f, 0.38f, 0.72f);
-    ring(0.0f, 0.0f, 0.050f, 1.0f, 0.76f, 0.42f, 0.72f);
+    ring(0.0f, 0.0f, 0.091f, 1.0f, 0.76f, 0.42f, 0.72f);
     glColor4f(0.72f, 0.84f, 1.0f, 0.20f);
-    ring(0.0f, 0.0f, 0.070f, 0.72f, 0.84f, 1.0f, 0.20f);
+    ring(0.0f, 0.0f, 0.118f, 0.72f, 0.84f, 1.0f, 0.20f);
     drawLabel("SAGITTARIUS A*", -0.18f, 0.15f, 0.0060f, 0.98f, true);
 }
 
@@ -381,13 +381,9 @@ void drawSunAndPlanets(double time, double speed, float aspect, const std::array
         circle(sunX, sunY, r, 64);
     }
     glColor4f(1.0f, 0.58f, 0.12f, 0.42f);
-    circle(sunX, sunY, 0.045f, 64);
-    glColor4f(1.0f, 0.76f, 0.30f, 0.90f);
-    circle(sunX, sunY, 0.030f, 64);
-    glColor4f(1.0f, 0.91f, 0.61f, 1.0f);
-    circle(sunX, sunY, 0.021f, 64);
-    glColor4f(1.0f, 0.99f, 0.88f, 1.0f);
-    circle(sunX - 0.004f, sunY + 0.005f, 0.010f, 48);
+    circle(sunX, sunY, 0.055f, 64);
+    drawTexturedSphere(sunX, sunY, 0.040f, textures[0],
+                       static_cast<float>(time * 0.035), 1.25f);
     drawLabel("SUN", sunX + 0.052f, sunY + 0.035f, 0.0055f, 0.88f, true);
 
     struct PlanetData {
