@@ -1,5 +1,12 @@
 # Galactic Orbit Screensaver
 
+<p align="center">
+  <img src="docs/galactic-orbit-overview.svg" alt="Illustrated top-down view of the Milky Way, Sagittarius A*, the Orion Spur, and the Sun" width="100%">
+</p>
+
+*Conceptual overview of the scene Galactic Orbit aims to render across a multi-monitor desktop. This illustration is schematic, not to scale, and is not a live screenshot of the current renderer.*
+
+
 A scientific-visualization-oriented Milky Way and Solar System display for Linux and KDE Plasma 6. The standalone SDL3/OpenGL preview renders a single scene over a borderless virtual-desktop window where the compositor permits it. The Plasma 6 wallpaper integration renders synchronized per-output slices using shared virtual-desktop coordinates, so the four-monitor wall is treated as one continuous canvas.
 
 ## Visualization goals
