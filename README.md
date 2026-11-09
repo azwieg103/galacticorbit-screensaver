@@ -22,7 +22,7 @@ Initial prototype. Multi-monitor spanning depends on the desktop compositor. X11
 Install dependencies:
 
 ```bash
-sudo dnf install gcc-c++ cmake make SDL2-devel mesa-libGL-devel
+sudo dnf install gcc-c++ cmake make SDL3-devel mesa-libGL-devel
 ```
 
 Build:
