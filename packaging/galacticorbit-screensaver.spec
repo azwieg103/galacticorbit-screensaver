@@ -16,7 +16,8 @@ BuildRequires:  libplasma-devel
 BuildRequires:  kf6-kcoreaddons-devel
 BuildRequires:  qt6-qtbase-devel
 BuildRequires:  qt6-qtdeclarative-devel
-BuildRequires:  qt6-qtshadertools-devel\nBuildRequires:  curl
+BuildRequires:  qt6-qtshadertools-devel
+BuildRequires:  curl
 
 %description
 A multi-monitor Milky Way and Solar System visualization using SDL3/OpenGL.
@@ -27,6 +28,7 @@ continuous, synchronized scene across the virtual desktop.
 %autosetup
 
 %build
+bash scripts/download-planet-textures.sh
 %cmake -DCMAKE_BUILD_TYPE=Release -DGALACTICORBIT_BUILD_PLASMA6=ON
 %cmake_build
 
