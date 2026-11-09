@@ -341,6 +341,7 @@ void drawSunAndPlanets(double time, double speed, float aspect) {
     circle(sunX, sunY, 0.021f, 64);
     glColor4f(1.0f, 0.99f, 0.88f, 1.0f);
     circle(sunX - 0.004f, sunY + 0.005f, 0.010f, 48);
+    drawLabel("SUN", sunX + 0.052f, sunY + 0.035f, 0.0055f, 0.88f, true);
 
     struct PlanetData {
         float orbit, eccentricity, speed, phase, radius;
@@ -400,9 +401,42 @@ void drawSunAndPlanets(double time, double speed, float aspect) {
         glColor4f(p.r, p.g, p.b, 1.0f);
         circle(px - p.radius * 0.18f, py + p.radius * 0.16f,
                p.radius * 0.78f, 36);
+        // Procedural surface markings give each world a recognizable character.
+        if (index == 0) {
+            glColor4f(0.18f, 0.20f, 0.23f, 0.72f);
+            circle(px + p.radius * 0.20f, py - p.radius * 0.18f, p.radius * 0.23f, 20);
+            ring(px + p.radius * 0.20f, py - p.radius * 0.18f, p.radius * 0.23f, 0.86f, 0.79f, 0.67f, 0.55f);
+        } else if (index == 1 || index == 3) {
+            glColor4f(index == 1 ? 1.0f : 0.52f, index == 1 ? 0.78f : 0.20f,
+                      index == 1 ? 0.42f : 0.12f, 0.58f);
+            circle(px + p.radius * 0.20f, py + p.radius * 0.05f, p.radius * 0.28f, 24);
+            glColor4f(0.20f, 0.12f, 0.09f, 0.55f);
+            circle(px - p.radius * 0.22f, py - p.radius * 0.20f, p.radius * 0.13f, 18);
+            ring(px - p.radius * 0.22f, py - p.radius * 0.20f, p.radius * 0.13f, 0.95f, 0.72f, 0.48f, 0.50f);
+        } else if (index == 2) {
+            glColor4f(0.10f, 0.62f, 0.30f, 0.92f);
+            circle(px + p.radius * 0.18f, py + p.radius * 0.10f, p.radius * 0.40f, 24);
+            glColor4f(0.16f, 0.72f, 0.38f, 0.88f);
+            circle(px - p.radius * 0.28f, py - p.radius * 0.18f, p.radius * 0.23f, 20);
+            glColor4f(0.92f, 0.97f, 1.0f, 0.70f);
+            circle(px - p.radius * 0.05f, py + p.radius * 0.62f, p.radius * 0.20f, 20);
+        } else {
+            for (int band = -2; band <= 2; ++band) {
+                const float by = py + band * p.radius * 0.34f;
+                const float half = std::sqrt(std::max(0.0f, 1.0f - std::pow(band * 0.34f, 2.0f)));
+                glLineWidth((index == 4 && band == 0) ? 2.2f : 1.2f);
+                glColor4f(p.r * 0.78f, p.g * 0.78f, p.b * 0.78f, 0.72f);
+                glBegin(GL_LINES);
+                glVertex2f(px - p.radius * half, by);
+                glVertex2f(px + p.radius * half, by);
+                glEnd();
+            }
+            glColor4f(0.72f, 0.28f, 0.16f, 0.88f);
+            circle(px + p.radius * 0.28f, py - p.radius * 0.18f, p.radius * 0.17f, 20);
+        }
         glColor4f(1.0f, 0.96f, 0.84f, 0.78f);
         circle(px - p.radius * 0.32f, py + p.radius * 0.34f,
-               p.radius * 0.22f, 20);
+               p.radius * 0.30f, 20);
 
         // Distinctive rings for the gas/ice giants.
         if (p.rings) {
