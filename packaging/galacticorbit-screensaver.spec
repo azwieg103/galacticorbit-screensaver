@@ -16,7 +16,7 @@ BuildRequires:  libplasma-devel
 BuildRequires:  kf6-kcoreaddons-devel
 BuildRequires:  qt6-qtbase-devel
 BuildRequires:  qt6-qtdeclarative-devel
-BuildRequires:  qt6-qtshadertools-devel
+BuildRequires:  qt6-qtshadertools-devel\nBuildRequires:  curl
 
 %description
 A multi-monitor Milky Way and Solar System visualization using SDL3/OpenGL.
