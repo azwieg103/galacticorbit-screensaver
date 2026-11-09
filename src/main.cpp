@@ -361,6 +361,7 @@ void drawSunAndPlanets(double time, double speed, float aspect) {
 
     for (std::size_t index = 0; index < std::size(planets); ++index) {
         const auto& p = planets[index];
+        const float pr = p.radius * 1.55f;
         const double a = p.phase + time * p.speed * speed;
         const float eccentric = 1.0f - p.eccentricity * std::cos(static_cast<float>(a));
         const float orbitX = p.orbit * 1.25f * eccentric;
@@ -374,8 +375,8 @@ void drawSunAndPlanets(double time, double speed, float aspect) {
         for (int j = 0; j < 120; ++j) {
             const float oa = static_cast<float>(2.0 * PI * j / 120);
             const float e = 1.0f - p.eccentricity * std::cos(oa);
-            glVertex2f(sunX + std::cos(oa) * p.orbit * e,
-                       sunY + std::sin(oa) * p.orbit * 0.82f * e);
+            glVertex2f(sunX + std::cos(oa) * p.orbit * 1.25f * e,
+                       sunY + std::sin(oa) * p.orbit * 1.25f * 0.82f * e);
         }
         glEnd();
 
@@ -388,55 +389,55 @@ void drawSunAndPlanets(double time, double speed, float aspect) {
             const double wa = a - (1.15 * (1.0 - fraction));
             const float we = 1.0f - p.eccentricity * std::cos(static_cast<float>(wa));
             planetWake.emplace_back(
-                sunX + std::cos(static_cast<float>(wa)) * p.orbit * we,
-                sunY + std::sin(static_cast<float>(wa)) * p.orbit * 0.82f * we);
+                sunX + std::cos(static_cast<float>(wa)) * p.orbit * 1.25f * we,
+                sunY + std::sin(static_cast<float>(wa)) * p.orbit * 1.25f * 0.82f * we);
         }
         glowLine(planetWake, p.r, p.g, p.b, 0.42f, 1.2f);
 
         // Planet halo, shaded disc, and a small illuminated crescent.
         glColor4f(p.r, p.g, p.b, 0.14f);
-        circle(px, py, p.radius * 2.5f, 32);
+        circle(px, py, pr * 2.5f, 32);
         glColor4f(p.r * 0.42f, p.g * 0.42f, p.b * 0.48f, 1.0f);
-        circle(px, py, p.radius * 1.35f, 40);
+        circle(px, py, pr * 1.35f, 40);
         glColor4f(p.r, p.g, p.b, 1.0f);
-        circle(px - p.radius * 0.18f, py + p.radius * 0.16f,
-               p.radius * 0.78f, 36);
+        circle(px - pr * 0.18f, py + pr * 0.16f,
+               pr * 0.78f, 36);
         // Procedural surface markings give each world a recognizable character.
         if (index == 0) {
             glColor4f(0.18f, 0.20f, 0.23f, 0.72f);
-            circle(px + p.radius * 0.20f, py - p.radius * 0.18f, p.radius * 0.23f, 20);
-            ring(px + p.radius * 0.20f, py - p.radius * 0.18f, p.radius * 0.23f, 0.86f, 0.79f, 0.67f, 0.55f);
+            circle(px + pr * 0.20f, py - pr * 0.18f, pr * 0.23f, 20);
+            ring(px + pr * 0.20f, py - pr * 0.18f, pr * 0.23f, 0.86f, 0.79f, 0.67f, 0.55f);
         } else if (index == 1 || index == 3) {
             glColor4f(index == 1 ? 1.0f : 0.52f, index == 1 ? 0.78f : 0.20f,
                       index == 1 ? 0.42f : 0.12f, 0.58f);
-            circle(px + p.radius * 0.20f, py + p.radius * 0.05f, p.radius * 0.28f, 24);
+            circle(px + pr * 0.20f, py + pr * 0.05f, pr * 0.28f, 24);
             glColor4f(0.20f, 0.12f, 0.09f, 0.55f);
-            circle(px - p.radius * 0.22f, py - p.radius * 0.20f, p.radius * 0.13f, 18);
-            ring(px - p.radius * 0.22f, py - p.radius * 0.20f, p.radius * 0.13f, 0.95f, 0.72f, 0.48f, 0.50f);
+            circle(px - pr * 0.22f, py - pr * 0.20f, pr * 0.13f, 18);
+            ring(px - pr * 0.22f, py - pr * 0.20f, pr * 0.13f, 0.95f, 0.72f, 0.48f, 0.50f);
         } else if (index == 2) {
             glColor4f(0.10f, 0.62f, 0.30f, 0.92f);
-            circle(px + p.radius * 0.18f, py + p.radius * 0.10f, p.radius * 0.40f, 24);
+            circle(px + pr * 0.18f, py + pr * 0.10f, pr * 0.40f, 24);
             glColor4f(0.16f, 0.72f, 0.38f, 0.88f);
-            circle(px - p.radius * 0.28f, py - p.radius * 0.18f, p.radius * 0.23f, 20);
+            circle(px - pr * 0.28f, py - pr * 0.18f, pr * 0.23f, 20);
             glColor4f(0.92f, 0.97f, 1.0f, 0.70f);
-            circle(px - p.radius * 0.05f, py + p.radius * 0.62f, p.radius * 0.20f, 20);
+            circle(px - pr * 0.05f, py + pr * 0.62f, pr * 0.20f, 20);
         } else {
             for (int band = -2; band <= 2; ++band) {
-                const float by = py + band * p.radius * 0.34f;
+                const float by = py + band * pr * 0.34f;
                 const float half = std::sqrt(std::max(0.0f, 1.0f - std::pow(band * 0.34f, 2.0f)));
                 glLineWidth((index == 4 && band == 0) ? 2.2f : 1.2f);
                 glColor4f(p.r * 0.78f, p.g * 0.78f, p.b * 0.78f, 0.72f);
                 glBegin(GL_LINES);
-                glVertex2f(px - p.radius * half, by);
-                glVertex2f(px + p.radius * half, by);
+                glVertex2f(px - pr * half, by);
+                glVertex2f(px + pr * half, by);
                 glEnd();
             }
             glColor4f(0.72f, 0.28f, 0.16f, 0.88f);
-            circle(px + p.radius * 0.28f, py - p.radius * 0.18f, p.radius * 0.17f, 20);
+            circle(px + pr * 0.28f, py - pr * 0.18f, pr * 0.17f, 20);
         }
         glColor4f(1.0f, 0.96f, 0.84f, 0.78f);
-        circle(px - p.radius * 0.32f, py + p.radius * 0.34f,
-               p.radius * 0.30f, 20);
+        circle(px - pr * 0.32f, py + pr * 0.34f,
+               pr * 0.30f, 20);
 
         // Distinctive rings for the gas/ice giants.
         if (p.rings) {
@@ -445,8 +446,8 @@ void drawSunAndPlanets(double time, double speed, float aspect) {
             glBegin(GL_LINE_LOOP);
             for (int j = 0; j < 64; ++j) {
                 const float ra = static_cast<float>(2.0 * PI * j / 64);
-                glVertex2f(px + std::cos(ra) * p.radius * 1.8f,
-                           py + std::sin(ra) * p.radius * 0.62f);
+                glVertex2f(px + std::cos(ra) * pr * 1.8f,
+                           py + std::sin(ra) * pr * 0.62f);
             }
             glEnd();
             glLineWidth(1.0f);
