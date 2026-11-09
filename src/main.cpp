@@ -162,10 +162,10 @@ void drawSunAndPlanets(double time, double speed, float aspect) {
     const float sunX = std::cos(static_cast<float>(sunAngle)) * sunOrbitX;
     const float sunY = std::sin(static_cast<float>(sunAngle)) * sunOrbit;
 
-    // The persistent trail shows the Sun's path around the galactic center.
+    // The persistent golden wake marks the Sun's path around the galactic core.
     std::vector<std::pair<float, float>> trail;
-    constexpr int trailSamples = 520;
-    constexpr double trailSeconds = 27.0;
+    constexpr int trailSamples = 620;
+    constexpr double trailSeconds = 32.0;
     trail.reserve(trailSamples);
     for (int i = 0; i < trailSamples; ++i) {
         const double fraction = static_cast<double>(i) / (trailSamples - 1);
@@ -174,41 +174,112 @@ void drawSunAndPlanets(double time, double speed, float aspect) {
         trail.emplace_back(std::cos(static_cast<float>(a)) * sunOrbitX,
                            std::sin(static_cast<float>(a)) * sunOrbit);
     }
-    glowLine(trail, 1.0f, 0.66f, 0.20f, 0.92f, 2.1f);
+    glowLine(trail, 1.0f, 0.58f, 0.16f, 0.96f, 3.0f);
 
-    // Sun's current position marker and soft corona.
-    glColor4f(1.0f, 0.62f, 0.12f, 0.10f);
-    circle(sunX, sunY, 0.080f, 48);
-    glColor4f(1.0f, 0.72f, 0.28f, 0.16f);
-    circle(sunX, sunY, 0.055f, 48);
-    glColor4f(1.0f, 0.86f, 0.52f, 1.0f);
-    circle(sunX, sunY, 0.027f, 48);
-    glColor4f(1.0f, 0.98f, 0.83f, 1.0f);
-    circle(sunX, sunY, 0.015f, 40);
+    // A soft gravitational field: nested, subtly distorted contours around the Sun.
+    for (int layer = 12; layer >= 1; --layer) {
+        const float r = 0.055f + layer * 0.018f;
+        glColor4f(1.0f, 0.55f, 0.16f, 0.010f + (12 - layer) * 0.0015f);
+        glBegin(GL_LINE_LOOP);
+        for (int i = 0; i < 144; ++i) {
+            const float a = static_cast<float>(2.0 * PI * i / 144);
+            const float warp = 1.0f + 0.075f * std::sin(3.0f * a + static_cast<float>(time * 0.12));
+            glVertex2f(sunX + std::cos(a) * r * warp,
+                       sunY + std::sin(a) * r * warp * 0.78f);
+        }
+        glEnd();
+    }
 
-    const Planet planets[] = {
-        {0.050f, 2.8f, 0.4f, 0.0050f, 0.70f, 0.78f, 0.90f},
-        {0.075f, 1.9f, 2.1f, 0.0075f, 0.92f, 0.58f, 0.34f},
-        {0.105f, 1.35f, 4.2f, 0.0080f, 0.34f, 0.70f, 1.00f},
-        {0.145f, 0.92f, 5.1f, 0.0065f, 0.88f, 0.40f, 0.30f},
-        {0.205f, 0.54f, 1.4f, 0.0140f, 0.90f, 0.72f, 0.48f},
-        {0.265f, 0.34f, 3.3f, 0.0120f, 0.78f, 0.68f, 0.52f}
+    // Layered corona and bright photosphere make the Sun the visual anchor.
+    for (int i = 16; i >= 1; --i) {
+        const float r = 0.012f + i * 0.0065f;
+        glColor4f(1.0f, 0.34f + 0.025f * i, 0.06f, 0.012f);
+        circle(sunX, sunY, r, 64);
+    }
+    glColor4f(1.0f, 0.58f, 0.12f, 0.42f);
+    circle(sunX, sunY, 0.045f, 64);
+    glColor4f(1.0f, 0.76f, 0.30f, 0.90f);
+    circle(sunX, sunY, 0.030f, 64);
+    glColor4f(1.0f, 0.91f, 0.61f, 1.0f);
+    circle(sunX, sunY, 0.021f, 64);
+    glColor4f(1.0f, 0.99f, 0.88f, 1.0f);
+    circle(sunX - 0.004f, sunY + 0.005f, 0.010f, 48);
+
+    struct PlanetData {
+        float orbit, eccentricity, speed, phase, radius;
+        float r, g, b;
+        bool rings;
+    };
+    const PlanetData planets[] = {
+        {0.060f, 0.08f, 2.75f, 0.4f, 0.0080f, 0.72f, 0.78f, 0.86f, false},
+        {0.088f, 0.05f, 1.95f, 2.1f, 0.0100f, 0.94f, 0.62f, 0.34f, false},
+        {0.122f, 0.07f, 1.42f, 4.2f, 0.0120f, 0.30f, 0.68f, 1.00f, false},
+        {0.162f, 0.10f, 1.02f, 5.1f, 0.0105f, 0.88f, 0.38f, 0.27f, false},
+        {0.218f, 0.06f, 0.61f, 1.4f, 0.0180f, 0.90f, 0.72f, 0.48f, true},
+        {0.278f, 0.08f, 0.39f, 3.3f, 0.0150f, 0.76f, 0.68f, 0.54f, true},
+        {0.335f, 0.05f, 0.27f, 0.8f, 0.0130f, 0.45f, 0.82f, 0.88f, true},
+        {0.385f, 0.04f, 0.20f, 2.8f, 0.0125f, 0.32f, 0.48f, 0.90f, false}
     };
 
-    for (const auto& p : planets) {
-        const float orbit = p.orbit;
-        ring(sunX, sunY, orbit, 0.58f, 0.68f, 0.88f, 0.20f);
+    for (std::size_t index = 0; index < std::size(planets); ++index) {
+        const auto& p = planets[index];
         const double a = p.phase + time * p.speed * speed;
-        const float px = sunX + std::cos(static_cast<float>(a)) * orbit;
-        const float py = sunY + std::sin(static_cast<float>(a)) * orbit;
+        const float eccentric = 1.0f - p.eccentricity * std::cos(static_cast<float>(a));
+        const float orbitX = p.orbit * eccentric;
+        const float orbitY = p.orbit * 0.82f * eccentric;
+        const float px = sunX + std::cos(static_cast<float>(a)) * orbitX;
+        const float py = sunY + std::sin(static_cast<float>(a)) * orbitY;
 
-        glColor4f(p.r, p.g, p.b, 0.13f);
-        circle(px, py, p.radius * 3.2f, 24);
+        // Draw only a faint orbital guide; the moving wake makes the Sun's pull legible.
+        glColor4f(0.52f, 0.66f, 0.94f, 0.075f);
+        glBegin(GL_LINE_LOOP);
+        for (int j = 0; j < 120; ++j) {
+            const float oa = static_cast<float>(2.0 * PI * j / 120);
+            const float e = 1.0f - p.eccentricity * std::cos(oa);
+            glVertex2f(sunX + std::cos(oa) * p.orbit * e,
+                       sunY + std::sin(oa) * p.orbit * 0.82f * e);
+        }
+        glEnd();
+
+        // A short luminous orbital wake trails each world, curving around the Sun.
+        std::vector<std::pair<float, float>> planetWake;
+        constexpr int wakeSamples = 44;
+        planetWake.reserve(wakeSamples);
+        for (int j = 0; j < wakeSamples; ++j) {
+            const double fraction = static_cast<double>(j) / (wakeSamples - 1);
+            const double wa = a - (1.15 * (1.0 - fraction));
+            const float we = 1.0f - p.eccentricity * std::cos(static_cast<float>(wa));
+            planetWake.emplace_back(
+                sunX + std::cos(static_cast<float>(wa)) * p.orbit * we,
+                sunY + std::sin(static_cast<float>(wa)) * p.orbit * 0.82f * we);
+        }
+        glowLine(planetWake, p.r, p.g, p.b, 0.42f, 1.2f);
+
+        // Planet halo, shaded disc, and a small illuminated crescent.
+        glColor4f(p.r, p.g, p.b, 0.14f);
+        circle(px, py, p.radius * 2.5f, 32);
+        glColor4f(p.r * 0.42f, p.g * 0.42f, p.b * 0.48f, 1.0f);
+        circle(px, py, p.radius, 40);
         glColor4f(p.r, p.g, p.b, 1.0f);
-        circle(px, py, p.radius, 24);
-        glColor4f(1.0f, 1.0f, 1.0f, 0.68f);
-        circle(px - p.radius * 0.28f, py + p.radius * 0.30f,
-               p.radius * 0.28f, 12);
+        circle(px - p.radius * 0.18f, py + p.radius * 0.16f,
+               p.radius * 0.78f, 36);
+        glColor4f(1.0f, 0.96f, 0.84f, 0.78f);
+        circle(px - p.radius * 0.32f, py + p.radius * 0.34f,
+               p.radius * 0.22f, 20);
+
+        // Distinctive rings for the gas/ice giants.
+        if (p.rings) {
+            glLineWidth(2.0f);
+            glColor4f(p.r, p.g, p.b, 0.62f);
+            glBegin(GL_LINE_LOOP);
+            for (int j = 0; j < 64; ++j) {
+                const float ra = static_cast<float>(2.0 * PI * j / 64);
+                glVertex2f(px + std::cos(ra) * p.radius * 1.8f,
+                           py + std::sin(ra) * p.radius * 0.62f);
+            }
+            glEnd();
+            glLineWidth(1.0f);
+        }
     }
 }
 
