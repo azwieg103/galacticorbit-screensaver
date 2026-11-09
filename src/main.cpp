@@ -9,7 +9,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
-#include <iterator>
+#include <iterator>\n#include <filesystem>
 #include <map>
 #include <random>
 #include <string>
@@ -22,6 +22,15 @@ GLuint loadTexture(const std::string& path) {
     int width = 0, height = 0, channels = 0;
     stbi_set_flip_vertically_on_load(1);
     stbi_uc* pixels = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb);
+#ifdef GALACTICORBIT_DATA_DIR
+    if (!pixels) {
+        const auto marker = path.find("planet-textures/");
+        if (marker != std::string::npos) {
+            const std::string installedPath = std::string(GALACTICORBIT_DATA_DIR) + "/" + path.substr(marker);
+            pixels = stbi_load(installedPath.c_str(), &width, &height, &channels, STBI_rgb);
+        }
+    }
+#endif
     if (!pixels) {
         std::cerr << "Texture unavailable: " << path << " (" << stbi_failure_reason() << ")\\n";
         return 0;
