@@ -36,9 +36,10 @@ vec3 mappedSphere(sampler2D tex, vec2 p) {
 float armField(vec2 p, float base, float t, float pitch) {
     float r = max(length(p), 0.002);
     float a = atan(p.y, p.x);
-    float spiral = a - base + log(r / 0.035) / pitch + t;
+    // Logarithmic spiral pattern, rotating as one coherent galactic structure.
+    float spiral = a - base - log(r / 0.035) / pitch - t;
     float wrapped = atan(sin(spiral), cos(spiral));
-    float width = mix(0.004, 0.018, smoothstep(0.04, 0.52, r));
+    float width = mix(0.006, 0.025, smoothstep(0.035, 0.45, r));
     return exp(-pow(wrapped * r / width, 2.0));
 }
 void main() {
@@ -47,35 +48,42 @@ void main() {
     float t = phase * 0.105 * rotationSpeed;
     vec3 c = vec3(0.0015,0.0025,0.008);
     float r = length(uv);
-    float disk = exp(-pow(uv.y / 0.13, 2.0)) * exp(-pow(r / 0.78, 3.0));
-    c += vec3(0.20,0.25,0.42) * disk * 0.22;
-    float bulge = exp(-r*r/0.012);
-    c += vec3(0.48,0.34,0.22) * bulge * 0.48;
+    // The complete face-on disk is framed inside the combined 2x2 display.
+    // Coordinates are normalized by desktop height, so the disk radius is ~0.44.
+    float disk = exp(-pow(uv.y / 0.095, 2.0)) * exp(-pow(r / 0.47, 4.0));
+    c += vec3(0.20,0.25,0.42) * disk * 0.30;
+    float bulge = exp(-r*r/0.0045);
+    c += vec3(0.48,0.34,0.22) * bulge * 0.52;
     for (int i=0;i<4;i++) {
         float base = float(i) * (PI*0.5) + 0.35;
         float f = armField(uv,base,t,0.29);
-        c += vec3(0.12,0.24,0.48) * f * 0.26;
-        float dust = armField(uv,base+0.10,t,0.29);
-        c *= 1.0 - dust * 0.13;
+        float broad = armField(uv,base,t,0.29);
+        c += vec3(0.15,0.29,0.58) * f * 0.48;
+        c += vec3(0.20,0.28,0.44) * broad * 0.22;
+        float dust = armField(uv,base+0.075,t,0.29);
+        c *= 1.0 - dust * 0.18;
     }
-    // Orion local spur is a distinct branch; Sun drifts relative to pattern speed.
-    float spur = exp(-pow((uv.y - (0.30 + 0.18*uv.x) + 0.10*sin(atan(uv.y,uv.x)-t))/0.010,2.0))
-               * smoothstep(0.16,0.28,r) * (1.0-smoothstep(0.54,0.67,r));
-    c += vec3(0.24,0.42,0.72) * spur * 0.34;
+    // Orion Spur branches between two major arms. Its reference radius is the Sun's.
+    float sunAnglePattern = 2.35 - t;
+    float spurAngle = atan(uv.y,uv.x);
+    float spurSpiral = spurAngle - (2.35 + log(max(r,0.002)/0.34)/0.29 - t);
+    float spur = exp(-pow(atan(sin(spurSpiral),cos(spurSpiral))*r/0.012,2.0))
+               * smoothstep(0.22,0.29,r) * (1.0-smoothstep(0.40,0.47,r));
+    c += vec3(0.30,0.52,0.82) * spur * 0.58;
     float stars = hash21(floor(pixel*0.65));
     float starMask = step(0.9975,stars);
     c += vec3(0.55,0.68,0.95) * starMask * (0.4 + 0.6*hash21(floor(pixel*0.21)));
-    // Prominent, intentionally magnified scientific depiction of Sgr A*.
-    float diskR = length(vec2(uv.x,uv.y*2.8));
-    float accretion = exp(-pow((diskR-0.052)/0.009,2.0));
-    c += vec3(1.0,0.36,0.09) * accretion * 1.35;
-    c += vec3(0.35,0.58,1.0) * exp(-pow((diskR-0.068)/0.008,2.0)) * 0.35;
-    float horizon = 1.0 - smoothstep(0.023,0.026,length(uv));
-    c = mix(c,vec3(0.0002,0.0001,0.0004),horizon);
-    float photon = exp(-pow((length(uv)-0.029)/0.0028,2.0));
-    c += vec3(1.0,0.78,0.46)*photon*0.8;
-    // Sun follows a distinct galactic orbital rate, not the spiral pattern.
-    float sunAngle = 2.35 - phase*0.098*rotationSpeed;
+    // Sagittarius A*: a compact central black hole, tiny beside the galactic disk.
+    float diskR = length(vec2(uv.x,uv.y*3.2));
+    float accretion = exp(-pow((diskR-0.025)/0.0045,2.0));
+    c += vec3(1.0,0.39,0.12) * accretion * 1.65;
+    c += vec3(0.42,0.62,1.0) * exp(-pow((diskR-0.034)/0.004,2.0)) * 0.42;
+    float horizon = 1.0 - smoothstep(0.0085,0.0105,length(uv));
+    c = mix(c,vec3(0.0001,0.0001,0.0003),horizon);
+    float photon = exp(-pow((length(uv)-0.012)/0.0014,2.0));
+    c += vec3(1.0,0.82,0.55)*photon*0.95;
+    // Sun remains at r=0.34 on the Orion Spur, drifting slightly relative to its pattern.
+    float sunAngle = 2.35 - t + phase*0.010*rotationSpeed;
     vec2 sunPos = 0.34*vec2(cos(sunAngle),sin(sunAngle));
     float sun = length(uv-sunPos);
     c += vec3(1.0,0.36,0.07)*exp(-pow(sun/0.024,2.0))*0.45;
