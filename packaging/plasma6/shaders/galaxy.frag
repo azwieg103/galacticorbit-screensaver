@@ -20,89 +20,146 @@ layout(binding = 6) uniform sampler2D jupiterTex;
 layout(binding = 7) uniform sampler2D saturnTex;
 layout(binding = 8) uniform sampler2D uranusTex;
 layout(binding = 9) uniform sampler2D neptuneTex;
+
 const float PI = 3.14159265359;
-float hash21(vec2 p) { return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
-vec3 mappedSphere(sampler2D tex, vec2 p) {
-    float rr = dot(p,p);
-    if (rr > 1.0) return vec3(0.0);
-    vec3 n = vec3(p.x, p.y, sqrt(max(0.0,1.0-rr)));
-    vec2 st = vec2(atan(n.z,n.x)/(2.0*PI)+0.5, asin(clamp(n.y,-1.0,1.0))/PI+0.5);
-    vec3 albedo = texture(tex,st).rgb;
-    vec3 lightDir = normalize(vec3(-0.42,0.22,0.88));
-    float diffuse = 0.12 + 0.88*max(dot(n,lightDir),0.0);
-    float limb = smoothstep(0.0,0.18,1.0-rr);
-    return albedo * diffuse * limb;
+float hash21(vec2 p) { return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
+float noise2(vec2 p) {
+    vec2 i=floor(p), f=fract(p);
+    f=f*f*(3.0-2.0*f);
+    return mix(mix(hash21(i),hash21(i+vec2(1,0)),f.x),
+               mix(hash21(i+vec2(0,1)),hash21(i+vec2(1,1)),f.x),f.y);
 }
-float armField(vec2 p, float base, float t, float pitch) {
-    float r = max(length(p), 0.002);
-    float a = atan(p.y, p.x);
-    // Logarithmic spiral pattern, rotating as one coherent galactic structure.
-    float spiral = a - base - log(r / 0.035) / pitch + t;
-    float wrapped = atan(sin(spiral), cos(spiral));
-    float width = mix(0.006, 0.025, smoothstep(0.035, 0.45, r));
-    return exp(-pow(wrapped * r / width, 2.0));
+float fbm(vec2 p) {
+    float v=0.0, a=0.5;
+    for(int i=0;i<4;i++){ v+=noise2(p)*a; p=p*2.03+vec2(17.1,9.2); a*=0.5; }
+    return v;
+}
+vec3 mappedSphere(sampler2D tex, vec2 p) {
+    float rr=dot(p,p);
+    if(rr>1.0) return vec3(0.0);
+    vec3 n=vec3(p.x,p.y,sqrt(max(0.0,1.0-rr)));
+    vec2 st=vec2(atan(n.z,n.x)/(2.0*PI)+0.5,asin(clamp(n.y,-1.0,1.0))/PI+0.5);
+    vec3 albedo=texture(tex,st).rgb;
+    vec3 lightDir=normalize(vec3(-0.42,0.22,0.88));
+    float diffuse=0.12+0.88*max(dot(n,lightDir),0.0);
+    float limb=smoothstep(0.0,0.18,1.0-rr);
+    return albedo*diffuse*limb;
+}
+vec2 galactic(vec2 uv) {
+    float a=-0.20;
+    mat2 rot=mat2(cos(a),-sin(a),sin(a),cos(a));
+    return rot*vec2(uv.x,uv.y*1.52);
+}
+vec2 screenFromGalactic(vec2 p) {
+    float a=-0.20;
+    mat2 inv=mat2(cos(a),sin(a),-sin(a),cos(a));
+    vec2 v=inv*p;
+    return vec2(v.x,v.y/1.52);
+}
+float armField(vec2 p,float base,float t,float pitch) {
+    float r=max(length(p),0.012);
+    float a=atan(p.y,p.x);
+    float phaseA=a-base-log(r/0.075)/pitch+t;
+    float wrapped=atan(sin(phaseA),cos(phaseA));
+    float ridge=wrapped*r;
+    float width=mix(0.010,0.033,smoothstep(0.06,0.66,r));
+    float turbulent=fbm(p*31.0+vec2(base*4.0,t*0.035));
+    float filament=exp(-pow((ridge+0.004*(turbulent-0.5))/width,2.0));
+    float clump=0.60+0.40*fbm(p*48.0+base*7.0);
+    return filament*clump;
 }
 void main() {
-    vec2 pixel = screenOrigin + qt_TexCoord0 * screenSize;
-    vec2 uv = (pixel - desktopSize * 0.5) / desktopSize.y;
-    float t = phase * 0.105 * rotationSpeed;
-    vec3 c = vec3(0.0015,0.0025,0.008);
-    float r = length(uv);
-    // The complete face-on disk is framed inside the combined 2x2 display.
-    // Coordinates are normalized by desktop height, so the disk radius is ~0.44.
-    float disk = exp(-pow(uv.y / 0.095, 2.0)) * exp(-pow(r / 0.47, 4.0));
-    c += vec3(0.20,0.25,0.42) * disk * 0.30;
-    float bulge = exp(-r*r/0.0045);
-    c += vec3(0.48,0.34,0.22) * bulge * 0.52;
-    for (int i=0;i<4;i++) {
-        float base = float(i) * (PI*0.5) + 0.35;
-        float f = armField(uv,base,t,0.29);
-        c += vec3(0.15,0.29,0.58) * f * 0.48;
-        c += vec3(0.20,0.28,0.44) * f * 0.22;
-        float dust = armField(uv,base+0.075,t,0.29);
-        c *= 1.0 - dust * 0.18;
+    vec2 pixel=screenOrigin+qt_TexCoord0*screenSize;
+    vec2 uv=(pixel-desktopSize*0.5)/desktopSize.y;
+    vec2 p=galactic(uv);
+    float t=phase*0.105*rotationSpeed;
+    float r=length(p);
+    float edge=1.0-smoothstep(0.66,0.79,r);
+    vec3 c=vec3(0.0012,0.0017,0.0055);
+
+    // Diffuse stellar disk and a warm, luminous central bulge.
+    float disk=exp(-pow(p.y/0.20,2.0))*exp(-pow(r/0.68,3.0));
+    float mottling=0.72+0.28*fbm(p*17.0+vec2(t*0.025,0.0));
+    c+=vec3(0.12,0.15,0.27)*disk*mottling*0.62;
+    float bulge=exp(-r*r/0.020);
+    c+=vec3(0.95,0.48,0.20)*bulge*0.52;
+    c+=vec3(0.50,0.40,0.75)*exp(-r*r/0.085)*0.11;
+
+    // Four broad, uneven major arms with blue star clouds and warm H-II knots.
+    float armTotal=0.0;
+    for(int i=0;i<4;i++) {
+        float base=float(i)*(PI*0.5)+0.52;
+        float f=armField(p,base,t,0.285);
+        armTotal=max(armTotal,f);
+        float cloud=fbm(p*42.0+vec2(float(i)*19.0,t*0.018));
+        c+=vec3(0.17,0.29,0.58)*f*(0.42+cloud*0.52);
+        c+=vec3(0.12,0.20,0.42)*f*f*0.55;
+        // Dark dust lane offset along the inner edge of each luminous arm.
+        float dust=armField(p,base+0.032,t,0.285);
+        float dustNoise=0.55+0.45*fbm(p*65.0+float(i)*11.0);
+        c*=1.0-dust*dustNoise*0.34;
+        // Scattered hot young-star regions, strongest in the outer disk.
+        float knots=pow(max(0.0,fbm(p*78.0+float(i)*31.0+t*0.01)-0.48),2.0);
+        c+=vec3(0.95,0.48,0.25)*knots*f*1.9;
     }
-    // Orion Spur branches between two major arms. Its reference radius is the Sun's.
-    float spurSpiral = spurAngle - (2.35 + log(max(r,0.002)/0.34)/0.29 - t);
-    float spur = exp(-pow(atan(sin(spurSpiral),cos(spurSpiral))*r/0.012,2.0))
-               * smoothstep(0.22,0.29,r) * (1.0-smoothstep(0.40,0.47,r));
-    c += vec3(0.30,0.52,0.82) * spur * 0.58;
-    float stars = hash21(floor(pixel*0.65));
-    float starMask = step(0.9975,stars);
-    c += vec3(0.55,0.68,0.95) * starMask * (0.4 + 0.6*hash21(floor(pixel*0.21)));
-    // Sagittarius A*: a compact central black hole, tiny beside the galactic disk.
-    float diskR = length(vec2(uv.x,uv.y*3.2));
-    float accretion = exp(-pow((diskR-0.025)/0.0045,2.0));
-    c += vec3(1.0,0.39,0.12) * accretion * 1.65;
-    c += vec3(0.42,0.62,1.0) * exp(-pow((diskR-0.034)/0.004,2.0)) * 0.42;
-    float horizon = 1.0 - smoothstep(0.0085,0.0105,length(uv));
-    c = mix(c,vec3(0.0001,0.0001,0.0003),horizon);
-    float photon = exp(-pow((length(uv)-0.012)/0.0014,2.0));
-    c += vec3(1.0,0.82,0.55)*photon*0.95;
-    // Sun remains at r=0.34 on the Orion Spur, drifting slightly relative to its pattern.
-    float sunAngle = 2.35 - t + phase*0.010*rotationSpeed;
-    vec2 sunPos = 0.34*vec2(cos(sunAngle),sin(sunAngle));
-    float sun = length(uv-sunPos);
-    c += vec3(1.0,0.36,0.07)*exp(-pow(sun/0.024,2.0))*0.45;
-    vec3 sunSurface = mappedSphere(sunTex,(uv-sunPos)/0.010);
-    c = mix(c,c+sunSurface*1.35,step(sun,0.010));
-    // Textured spherical worlds follow separate, faster heliocentric orbits.
-    for (int j=0;j<8;j++) {
-        float a = phase*(0.34+float(j)*0.055)+float(j)*1.7;
-        float orbit = 0.025+float(j)*0.011;
-        vec2 pp = sunPos + vec2(cos(a),sin(a))*orbit;
-        float pr = 0.0048+float(j)*0.00055;
-        vec2 local = (uv-pp)/pr;
-        vec3 world = vec3(0.0);
-        if (j==0) world = mappedSphere(mercuryTex,local);
-        else if (j==1) world = mappedSphere(venusTex,local);
-        else if (j==2) world = mappedSphere(earthTex,local);
-        else if (j==3) world = mappedSphere(marsTex,local);
-        else if (j==4) world = mappedSphere(jupiterTex,local);
-        else if (j==5) world = mappedSphere(saturnTex,local);
-        else if (j==6) world = mappedSphere(uranusTex,local);
-        else world = mappedSphere(neptuneTex,local);
-        c += world;
+
+    // Orion Spur: a distinct shorter branch between two major arms.
+    float spurAngle=atan(p.y,p.x);
+    float spurPhase=spurAngle-(2.35+log(max(r,0.012)/0.34)/0.285-t);
+    float spurDistance=atan(sin(spurPhase),cos(spurPhase))*r;
+    float spur=exp(-pow(spurDistance/0.014,2.0))
+        *smoothstep(0.20,0.28,r)*(1.0-smoothstep(0.43,0.50,r));
+    float spurCloud=fbm(p*53.0+vec2(5.0,t*0.02));
+    c+=vec3(0.22,0.39,0.72)*spur*(0.48+spurCloud*0.62);
+    c+=vec3(0.92,0.48,0.27)*spur*pow(max(0.0,spurCloud-0.58),2.0)*3.0;
+
+    // Dense, irregular star fields throughout the disk, not only on arm centerlines.
+    float field=hash21(floor(pixel*0.72));
+    float starMask=step(0.9972,field);
+    float starBright=0.35+0.65*hash21(floor(pixel*0.19));
+    c+=vec3(0.54,0.66,0.96)*starMask*starBright*(0.35+disk*1.5);
+    float fine=hash21(floor(pixel*1.7));
+    c+=vec3(0.30,0.39,0.63)*step(0.9992,fine)*disk*0.65;
+
+    // Fade the outer edge softly into deep space.
+    c=mix(vec3(0.0012,0.0017,0.0055),c,edge);
+
+    // Sagittarius A*: compact dark horizon and small, brilliant tilted accretion ring.
+    float diskR=length(vec2(p.x,p.y*3.5));
+    float accretion=exp(-pow((diskR-0.024)/0.0042,2.0));
+    c+=vec3(1.0,0.39,0.12)*accretion*1.65;
+    c+=vec3(0.48,0.66,1.0)*exp(-pow((diskR-0.034)/0.0045,2.0))*0.48;
+    float horizon=1.0-smoothstep(0.0085,0.0110,length(p));
+    c=mix(c,vec3(0.00005,0.00004,0.0001),horizon);
+    float photon=exp(-pow((length(p)-0.012)/0.0015,2.0));
+    c+=vec3(1.0,0.82,0.56)*photon*1.05;
+
+    // Sun shares the Orion Spur's pattern rotation, with only slight orbital drift.
+    float sunAngle=2.35-t+phase*0.010*rotationSpeed;
+    vec2 sunGal=0.34*vec2(cos(sunAngle),sin(sunAngle));
+    vec2 sunPos=screenFromGalactic(sunGal);
+    float sunDist=length(uv-sunPos);
+    c+=vec3(1.0,0.38,0.10)*exp(-pow(sunDist/0.020,2.0))*0.48;
+    vec3 sunSurface=mappedSphere(sunTex,(uv-sunPos)/0.0095);
+    c=mix(c,c+sunSurface*1.5,step(sunDist,0.0095));
+
+    // Textured planets orbit the Sun as a compact, secondary detail.
+    for(int j=0;j<8;j++) {
+        float a=phase*(0.34+float(j)*0.055)+float(j)*1.7;
+        float orbit=0.024+float(j)*0.010;
+        vec2 pp=sunPos+vec2(cos(a),sin(a))*orbit;
+        float pr=0.0038+float(j)*0.00048;
+        vec2 local=(uv-pp)/pr;
+        vec3 world=vec3(0.0);
+        if(j==0) world=mappedSphere(mercuryTex,local);
+        else if(j==1) world=mappedSphere(venusTex,local);
+        else if(j==2) world=mappedSphere(earthTex,local);
+        else if(j==3) world=mappedSphere(marsTex,local);
+        else if(j==4) world=mappedSphere(jupiterTex,local);
+        else if(j==5) world=mappedSphere(saturnTex,local);
+        else if(j==6) world=mappedSphere(uranusTex,local);
+        else world=mappedSphere(neptuneTex,local);
+        c+=world;
     }
-    fragColor = vec4(c,1.0)*qt_Opacity;
+    fragColor=vec4(c,1.0)*qt_Opacity;
 }
