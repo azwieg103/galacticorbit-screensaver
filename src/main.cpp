@@ -292,26 +292,14 @@ void drawGalaxy(float time, float aspect) {
 }
 
 void drawSunAndPlanets(double time, double speed, float aspect) {
-    const double sunRate = 0.22 * speed;
-    const double sunAngle = 2.35 - time * sunRate;
-    constexpr float sunOrbit = 0.59f;
-    const float sunOrbitX = sunOrbit * std::max(1.0f, aspect * 0.55f);
-    const float sunX = std::cos(static_cast<float>(sunAngle)) * sunOrbitX;
-    const float sunY = std::sin(static_cast<float>(sunAngle)) * sunOrbit;
-
-    // The persistent golden wake marks the Sun's path around the galactic core.
-    std::vector<std::pair<float, float>> trail;
-    constexpr int trailSamples = 620;
-    constexpr double trailSeconds = 32.0;
-    trail.reserve(trailSamples);
-    for (int i = 0; i < trailSamples; ++i) {
-        const double fraction = static_cast<double>(i) / (trailSamples - 1);
-        const double past = time - trailSeconds * (1.0 - fraction);
-        const double a = 2.35 - past * sunRate;
-        trail.emplace_back(std::cos(static_cast<float>(a)) * sunOrbitX,
-                           std::sin(static_cast<float>(a)) * sunOrbit);
-    }
-    glowLine(trail, 1.0f, 0.58f, 0.16f, 0.96f, 3.0f);
+    // Keep the Sun physically attached to the Orion Spur: it shares the
+    // galaxy's rotation and sits directly on the spur's centerline at r=0.66.
+    // There is deliberately no separate circular orbit or detached golden trail.
+    const float galaxyRotation = -static_cast<float>(time * 0.018);
+    constexpr float sunRadius = 0.66f;
+    const float spurAngle = 2.35f + galaxyRotation;
+    const float sunX = std::cos(spurAngle) * sunRadius * std::max(1.0f, aspect * 0.92f);
+    const float sunY = std::sin(spurAngle) * sunRadius;
 
     // A soft gravitational field: nested, subtly distorted contours around the Sun.
     for (int layer = 12; layer >= 1; --layer) {
