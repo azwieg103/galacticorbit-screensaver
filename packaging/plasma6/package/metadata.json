@@ -3,11 +3,12 @@
   "KPlugin": {
     "Authors": [{"Name": "Zwiegnet"}],
     "Category": "Other",
-    "Description": "Scientific Milky Way and Solar System visualization spanning the virtual desktop",
+    "Description": "Animated Milky Way and Solar System background for the KDE Plasma 6 lock screen",
     "Icon": "applications-science",
     "Id": "org.zwiegnet.galacticorbit",
     "License": "GPL-3.0-or-later",
-    "Name": "Galactic Orbit"
+    "Name": "Galactic Orbit",
+    "Version": "0.1.0"
   },
   "X-Plasma-API-Minimum-Version": "6.0"
 }
