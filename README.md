@@ -1,6 +1,6 @@
 # Galactic Orbit Screensaver
 
-A native Linux/OpenGL screensaver prototype for a four-monitor desktop. It renders one continuous face-on galaxy across the combined desktop, with the Sun traveling along a glowing orbital path through the Orion Arm and planets orbiting the Sun.
+A native Linux/OpenGL screensaver prototype for a four-monitor desktop. It renders one continuous face-on galaxy across the combined desktop, with Sagittarius A* at the center, four rotating spiral arms, the Sun embedded in the Orion Spur, and planets orbiting the Sun.
 
 ## Visual design
 
