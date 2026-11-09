@@ -11,8 +11,28 @@ layout(std140, binding = 0) uniform buf {
     float rotationSpeed;
     float showLabels;
 };
+layout(binding = 1) uniform sampler2D sunTex;
+layout(binding = 2) uniform sampler2D mercuryTex;
+layout(binding = 3) uniform sampler2D venusTex;
+layout(binding = 4) uniform sampler2D earthTex;
+layout(binding = 5) uniform sampler2D marsTex;
+layout(binding = 6) uniform sampler2D jupiterTex;
+layout(binding = 7) uniform sampler2D saturnTex;
+layout(binding = 8) uniform sampler2D uranusTex;
+layout(binding = 9) uniform sampler2D neptuneTex;
 const float PI = 3.14159265359;
 float hash21(vec2 p) { return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
+vec3 mappedSphere(sampler2D tex, vec2 p) {
+    float rr = dot(p,p);
+    if (rr > 1.0) return vec3(0.0);
+    vec3 n = vec3(p.x, p.y, sqrt(max(0.0,1.0-rr)));
+    vec2 st = vec2(atan(n.z,n.x)/(2.0*PI)+0.5, asin(clamp(n.y,-1.0,1.0))/PI+0.5);
+    vec3 albedo = texture(tex,st).rgb;
+    vec3 lightDir = normalize(vec3(-0.42,0.22,0.88));
+    float diffuse = 0.12 + 0.88*max(dot(n,lightDir),0.0);
+    float limb = smoothstep(0.0,0.18,1.0-rr);
+    return albedo * diffuse * limb;
+}
 float armField(vec2 p, float base, float t, float pitch) {
     float r = max(length(p), 0.002);
     float a = atan(p.y, p.x);
@@ -58,15 +78,26 @@ void main() {
     float sunAngle = 2.35 - phase*0.098*rotationSpeed;
     vec2 sunPos = 0.34*vec2(cos(sunAngle),sin(sunAngle));
     float sun = length(uv-sunPos);
-    c += vec3(1.0,0.36,0.07)*exp(-pow(sun/0.018,2.0))*0.45;
-    c += vec3(1.0,0.78,0.38)*exp(-pow(sun/0.006,2.0))*1.4;
-    // Planetary system is a restrained set of small, separately orbiting points.
+    c += vec3(1.0,0.36,0.07)*exp(-pow(sun/0.024,2.0))*0.45;
+    vec3 sunSurface = mappedSphere(sunTex,(uv-sunPos)/0.010);
+    c = mix(c,c+sunSurface*1.35,step(sun,0.010));
+    // Textured spherical worlds follow separate, faster heliocentric orbits.
     for (int j=0;j<8;j++) {
-        float a = phase*(0.35+float(j)*0.08)+float(j)*1.7;
-        float pr = 0.012+float(j)*0.004;
-        vec2 pp = sunPos + vec2(cos(a),sin(a))*((0.025+float(j)*0.012));
-        float pd = length(uv-pp);
-        c += vec3(0.35+0.06*float(j),0.52+0.035*float(j),0.78)*exp(-pow(pd/pr,2.0))*0.5;
+        float a = phase*(0.34+float(j)*0.055)+float(j)*1.7;
+        float orbit = 0.025+float(j)*0.011;
+        vec2 pp = sunPos + vec2(cos(a),sin(a))*orbit;
+        float pr = 0.0048+float(j)*0.00055;
+        vec2 local = (uv-pp)/pr;
+        vec3 world = vec3(0.0);
+        if (j==0) world = mappedSphere(mercuryTex,local);
+        else if (j==1) world = mappedSphere(venusTex,local);
+        else if (j==2) world = mappedSphere(earthTex,local);
+        else if (j==3) world = mappedSphere(marsTex,local);
+        else if (j==4) world = mappedSphere(jupiterTex,local);
+        else if (j==5) world = mappedSphere(saturnTex,local);
+        else if (j==6) world = mappedSphere(uranusTex,local);
+        else world = mappedSphere(neptuneTex,local);
+        c += world;
     }
     fragColor = vec4(c,1.0)*qt_Opacity;
 }
