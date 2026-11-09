@@ -6,7 +6,9 @@ WallpaperItem {
     id: root
     property rect screenRect: Qt.rect(0, 0, width, height)
     property rect desktopRect: Qt.rect(0, 0, width, height)
-    property real rotationSpeed: configuration.rotationSpeed / 100.0
+    // Deliberately slow all orbital and galactic motion for smooth, ambient lock-screen animation.
+    // 0.025 makes the default animation about 40x slower than the original shader timing.
+    property real rotationSpeed: (configuration.rotationSpeed / 100.0) * 0.025
     property bool showLabels: configuration.showLabels
     function refreshGeometry() {
         const s = DisplayGeometry.screenGeometry(root)
