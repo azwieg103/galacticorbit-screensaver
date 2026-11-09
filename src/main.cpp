@@ -80,9 +80,9 @@ void glowLine(const std::vector<std::pair<float, float>>& points,
 }
 
 void drawStars(const std::vector<Star>& stars) {
+    glPointSize(1.8f);
     glBegin(GL_POINTS);
     for (const auto& s : stars) {
-        glPointSize(s.size);
         glColor4f(0.66f * s.brightness, 0.76f * s.brightness,
                   s.brightness, s.brightness);
         glVertex2f(s.x, s.y);
@@ -293,7 +293,9 @@ int main(int argc, char** argv) {
         flags |= SDL_WINDOW_BORDERLESS;
     }
 
-    if (!options.windowed) flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+    // Prefer one borderless surface spanning the virtual desktop. Fullscreen
+    // is reserved for the single-display fallback when span mode is disabled.
+    if (!options.windowed && !options.span) flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 
     SDL_Window* window = SDL_CreateWindow("Galactic Orbit Screensaver",
         x, y, width, height, flags);
