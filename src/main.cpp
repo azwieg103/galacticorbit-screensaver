@@ -22,7 +22,8 @@ struct PlanetTexture { GLuint id = 0; int width = 0; int height = 0; };
 
 GLuint loadTexture(const std::string& path) {
     int width = 0, height = 0, channels = 0;
-    stbi_set_flip_vertically_on_load(1);\n    stbi_uc* pixels = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb);
+    stbi_set_flip_vertically_on_load(1);
+    stbi_uc* pixels = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb);
     if (!pixels) {
         std::cerr << "Texture unavailable: " << path << " (" << stbi_failure_reason() << ")\\n";
         return 0;
@@ -360,7 +361,9 @@ void drawSunAndPlanets(double time, double speed, float aspect, const std::array
     const float sunX = std::cos(spurAngle) * sunRadius * std::max(1.0f, aspect * 0.98f);
     const float sunY = std::sin(spurAngle) * sunRadius;
 
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);\n\n    // A soft gravitational field: nested, subtly distorted contours around the Sun.
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // A soft gravitational field: nested, subtly distorted contours around the Sun.
     for (int layer = 12; layer >= 1; --layer) {
         const float r = 0.055f + layer * 0.018f;
         glColor4f(1.0f, 0.55f, 0.16f, 0.010f + (12 - layer) * 0.0015f);
@@ -463,7 +466,7 @@ void drawSunAndPlanets(double time, double speed, float aspect, const std::array
 }
 
 void render(const std::vector<Star>& stars, int width, int height,
-            double elapsed, double speed) {
+            double elapsed, double speed, const std::array<GLuint, 9>& textures) {
     const float aspect = static_cast<float>(width) / std::max(1, height);
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
@@ -473,10 +476,11 @@ void render(const std::vector<Star>& stars, int width, int height,
     glLoadIdentity();
 
     glClearColor(0.006f, 0.008f, 0.025f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-    glDisable(GL_DEPTH_TEST);
     glEnable(GL_POINT_SMOOTH);
 
     drawStars(stars);
