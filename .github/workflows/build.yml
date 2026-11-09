@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y cmake g++ libsdl2-dev libgl1-mesa-dev
+        run: sudo apt-get update && sudo apt-get install -y cmake g++ libsdl3-dev libgl1-mesa-dev
       - name: Configure
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
       - name: Build
