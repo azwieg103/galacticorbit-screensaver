@@ -1,0 +1,13 @@
+{
+  "KPackageStructure": "Plasma/Wallpaper",
+  "KPlugin": {
+    "Authors": [{"Name": "Zwiegnet"}],
+    "Category": "Other",
+    "Description": "Scientific Milky Way and Solar System visualization spanning the virtual desktop",
+    "Icon": "applications-science",
+    "Id": "org.zwiegnet.galacticorbit",
+    "License": "GPL-3.0-or-later",
+    "Name": "Galactic Orbit"
+  },
+  "X-Plasma-API-Minimum-Version": "6.0"
+}
