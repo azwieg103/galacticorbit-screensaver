@@ -234,8 +234,8 @@ void drawLabel(const std::string& label, float x, float y, float scale,
 void drawSagittariusA(float time) {
     // A luminous, tilted accretion disk surrounds a truly dark event horizon.
     for (int layer = 0; layer < 7; ++layer) {
-        const float rx = 0.155f + layer * 0.020f;
-        const float ry = 0.040f + layer * 0.006f;
+        const float rx = 0.205f + layer * 0.023f;
+        const float ry = 0.052f + layer * 0.008f;
         glLineWidth(layer < 2 ? 5.0f : 2.0f);
         glColor4f(1.0f, 0.25f + layer * 0.075f, 0.035f, 0.10f + layer * 0.018f);
         glBegin(GL_LINE_LOOP);
@@ -254,18 +254,18 @@ void drawSagittariusA(float time) {
     // Opaque event horizon cuts through the bright disk.
     glDisable(GL_BLEND);
     glColor4f(0.001f, 0.001f, 0.004f, 1.0f);
-    circle(0.0f, 0.0f, 0.082f, 128);
+    circle(0.0f, 0.0f, 0.118f, 128);
     glEnable(GL_BLEND);
     glColor4f(1.0f, 0.78f, 0.38f, 0.72f);
-    ring(0.0f, 0.0f, 0.091f, 1.0f, 0.76f, 0.42f, 0.72f);
+    ring(0.0f, 0.0f, 0.128f, 1.0f, 0.76f, 0.42f, 0.72f);
     glColor4f(0.72f, 0.84f, 1.0f, 0.20f);
-    ring(0.0f, 0.0f, 0.118f, 0.72f, 0.84f, 1.0f, 0.20f);
-    drawLabel("SAGITTARIUS A*", -0.18f, 0.15f, 0.0060f, 0.98f, true);
+    ring(0.0f, 0.0f, 0.154f, 0.72f, 0.84f, 1.0f, 0.20f);
+    drawLabel("SAGITTARIUS A*", -0.24f, 0.205f, 0.0072f, 0.99f, true);
 }
 
 void drawGalaxy(float time, float aspect) {
     // The arm structure rotates clockwise slowly around a stable galactic center.
-    const float rotation = -time * 0.055f;
+    const float rotation = -time * 0.11f;
     const float maxRadius = 0.86f;
     const float galaxyXScale = std::max(1.0f, aspect * 0.98f);
     const float pitch = 0.31f;
@@ -352,9 +352,9 @@ void drawSunAndPlanets(double time, double speed, float aspect, const std::array
     // Keep the Sun physically attached to the Orion Spur: it shares the
     // galaxy's rotation and sits directly on the spur's centerline at r=0.66.
     // There is deliberately no separate circular orbit or detached golden trail.
-    const float galaxyRotation = -static_cast<float>(time * 0.055);
+    const float galaxyRotation = -static_cast<float>(time * 0.11);
     constexpr float sunRadius = 0.66f;
-    const float spurAngle = 2.35f + galaxyRotation;
+    // The Sun's galactic orbit is distinct from the spiral-pattern speed.\n    // A small differential rate lets it drift through the Orion Spur over time.\n    const float spurAngle = 2.35f + galaxyRotation + static_cast<float>(time * 0.010);
     const float sunX = std::cos(spurAngle) * sunRadius * std::max(1.0f, aspect * 0.98f);
     const float sunY = std::sin(spurAngle) * sunRadius;
 
@@ -404,7 +404,7 @@ void drawSunAndPlanets(double time, double speed, float aspect, const std::array
 
     for (std::size_t index = 0; index < std::size(planets); ++index) {
         const auto& p = planets[index];
-        const float pr = p.radius * 2.2f;
+        const float pr = p.radius * 1.15f;
         const double a = p.phase + time * p.speed * speed;
         const float eccentric = 1.0f - p.eccentricity * std::cos(static_cast<float>(a));
         const float orbitX = p.orbit * 1.25f * eccentric;
