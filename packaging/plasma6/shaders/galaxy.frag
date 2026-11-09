@@ -65,7 +65,7 @@ float armField(vec2 p,float base,float t,float pitch) {
     float width=mix(0.010,0.033,smoothstep(0.06,0.66,r));
     float turbulent=fbm(p*31.0+vec2(base*4.0,t*0.035));
     float filament=exp(-pow((ridge+0.004*(turbulent-0.5))/width,2.0));
-    float clump=0.60+0.40*fbm(p*48.0+base*7.0);
+    float clump=0.60+0.40*fbm(p*48.0+vec2(base*7.0,base*3.1));
     return filament*clump;
 }
 void main() {
@@ -96,10 +96,10 @@ void main() {
         c+=vec3(0.12,0.20,0.42)*f*f*0.55;
         // Dark dust lane offset along the inner edge of each luminous arm.
         float dust=armField(p,base+0.032,t,0.285);
-        float dustNoise=0.55+0.45*fbm(p*65.0+float(i)*11.0);
+        float dustNoise=0.55+0.45*fbm(p*65.0+vec2(float(i)*11.0,float(i)*5.3));
         c*=1.0-dust*dustNoise*0.34;
         // Scattered hot young-star regions, strongest in the outer disk.
-        float knots=pow(max(0.0,fbm(p*78.0+float(i)*31.0+t*0.01)-0.48),2.0);
+        float knots=pow(max(0.0,fbm(p*78.0+vec2(float(i)*31.0,float(i)*13.7)+vec2(t*0.01))-0.48),2.0);
         c+=vec3(0.95,0.48,0.25)*knots*f*1.9;
     }
 
