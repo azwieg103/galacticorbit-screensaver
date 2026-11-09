@@ -265,7 +265,7 @@ Options parseArgs(int argc, char** argv) {
 
 int main(int argc, char** argv) {
     const Options options = parseArgs(argc, argv);
-    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER)) {
+    if (!SDL_Init(SDL_INIT_VIDEO)) {
         std::cerr << "SDL_Init failed: " << SDL_GetError() << '\n';
         return 1;
     }
@@ -341,8 +341,8 @@ int main(int argc, char** argv) {
     while (running) {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) running = false;
-            if (event.type == SDL_KEYDOWN) {
+            if (event.type == SDL_EVENT_QUIT) running = false;
+            if (event.type == SDL_EVENT_KEY_DOWN) {
                 switch (event.key.key) {
                     case SDLK_ESCAPE:
                     case SDLK_Q: running = false; break;
@@ -372,7 +372,7 @@ int main(int argc, char** argv) {
         SDL_GL_SwapWindow(window);
     }
 
-    SDL_GL_DeleteContext(context);
+    SDL_GL_DestroyContext(context);
     SDL_DestroyWindow(window);
     SDL_Quit();
     return 0;
