@@ -18,7 +18,7 @@ add_library(galacticorbitgeometryplugin MODULE
     geometry/DisplayGeometryPlugin.cpp
 )
 target_link_libraries(galacticorbitgeometryplugin PRIVATE Qt6::Core Qt6::Gui Qt6::Qml Qt6::Quick)
-set_target_properties(galacticorbitgeometryplugin PROPERTIES PREFIX "" OUTPUT_NAME "galacticorbitgeometryplugin")
+set_target_properties(galacticorbitgeometryplugin PROPERTIES PREFIX "lib" OUTPUT_NAME "galacticorbitgeometryplugin")
 
 qt_add_shaders(galacticorbitgeometryplugin galacticorbit_shaders
     PREFIX "/org/zwiegnet/galacticorbit/shaders"
