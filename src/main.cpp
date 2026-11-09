@@ -9,7 +9,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
-#include <iterator>\n#include <filesystem>
+#include <iterator>
 #include <map>
 #include <random>
 #include <string>
@@ -363,7 +363,9 @@ void drawSunAndPlanets(double time, double speed, float aspect, const std::array
     // There is deliberately no separate circular orbit or detached golden trail.
     const float galaxyRotation = -static_cast<float>(time * 0.11);
     constexpr float sunRadius = 0.66f;
-    // The Sun's galactic orbit is distinct from the spiral-pattern speed.\n    // A small differential rate lets it drift through the Orion Spur over time.\n    const float spurAngle = 2.35f + galaxyRotation + static_cast<float>(time * 0.010);
+    // The Sun's galactic orbit is distinct from the spiral-pattern speed.
+    // A small differential rate lets it drift through the Orion Spur over time.
+    const float spurAngle = 2.35f + galaxyRotation + static_cast<float>(time * 0.010);
     const float sunX = std::cos(spurAngle) * sunRadius * std::max(1.0f, aspect * 0.98f);
     const float sunY = std::sin(spurAngle) * sunRadius;
 
