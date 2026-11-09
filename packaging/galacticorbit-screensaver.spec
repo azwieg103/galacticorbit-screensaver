@@ -1,7 +1,7 @@
 Name:           galacticorbit-screensaver
 Version:        0.1.0
-Release:        1%{?dist}
-Summary:        Milky Way and Solar System screensaver for KDE Plasma 6
+Release:        2%{?dist}
+Summary:        Animated Milky Way background for KDE Plasma 6 lock screen
 License:        GPL-3.0-only
 URL:            https://github.com/azwieg103/galacticorbit-screensaver
 Source0:        %{name}-%{version}.tar.gz
@@ -20,9 +20,12 @@ BuildRequires:  qt6-qtshadertools-devel
 BuildRequires:  curl
 
 %description
-A multi-monitor Milky Way and Solar System visualization using SDL3/OpenGL.
-The package includes a KDE Plasma 6 wallpaper integration that renders one
-continuous, synchronized scene across the virtual desktop.
+An animated Milky Way and Solar System visualization for KDE Plasma 6.
+The package installs a Plasma wallpaper plugin that can be selected
+independently as the KScreenLocker background in System Settings ->
+Screen Locking -> Appearance. KDE's normal lock screen and password
+authentication remain unchanged. The package also includes a standalone
+SDL3/OpenGL preview executable.
 
 %prep
 %autosetup
@@ -47,7 +50,11 @@ bash scripts/download-planet-textures.sh
 %{_libdir}/qt6/qml/org/zwiegnet/galacticorbit/geometry/libgalacticorbitgeometryplugin.so
 
 %changelog
+* Mon Nov 09 2026 Zwiegnet <programming@zwiegnet.com> - 0.1.0-2
+- Clarify and package Galactic Orbit as a selectable KScreenLocker background.
+- Add explicit Plasma wallpaper package version metadata.
+- Preserve KDE's standard lock screen and authentication UI.
 * Mon Nov 09 2026 Zwiegnet <programming@zwiegnet.com> - 0.1.0-1
 - Add AlmaLinux 10 RPM packaging and KDE Plasma 6 wallpaper integration.
 - Add synchronized per-display rendering over the virtual desktop.
-- Improve galaxy framing, black-hole visibility, and independent Sun motion.
+- Improve galaxy framing, black-hole visibility, and solar-system placement.
