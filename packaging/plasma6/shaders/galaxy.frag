@@ -37,7 +37,7 @@ float armField(vec2 p, float base, float t, float pitch) {
     float r = max(length(p), 0.002);
     float a = atan(p.y, p.x);
     // Logarithmic spiral pattern, rotating as one coherent galactic structure.
-    float spiral = a - base - log(r / 0.035) / pitch - t;
+    float spiral = a - base - log(r / 0.035) / pitch + t;
     float wrapped = atan(sin(spiral), cos(spiral));
     float width = mix(0.006, 0.025, smoothstep(0.035, 0.45, r));
     return exp(-pow(wrapped * r / width, 2.0));
@@ -57,15 +57,12 @@ void main() {
     for (int i=0;i<4;i++) {
         float base = float(i) * (PI*0.5) + 0.35;
         float f = armField(uv,base,t,0.29);
-        float broad = armField(uv,base,t,0.29);
         c += vec3(0.15,0.29,0.58) * f * 0.48;
-        c += vec3(0.20,0.28,0.44) * broad * 0.22;
+        c += vec3(0.20,0.28,0.44) * f * 0.22;
         float dust = armField(uv,base+0.075,t,0.29);
         c *= 1.0 - dust * 0.18;
     }
     // Orion Spur branches between two major arms. Its reference radius is the Sun's.
-    float sunAnglePattern = 2.35 - t;
-    float spurAngle = atan(uv.y,uv.x);
     float spurSpiral = spurAngle - (2.35 + log(max(r,0.002)/0.34)/0.29 - t);
     float spur = exp(-pow(atan(sin(spurSpiral),cos(spurSpiral))*r/0.012,2.0))
                * smoothstep(0.22,0.29,r) * (1.0-smoothstep(0.40,0.47,r));
