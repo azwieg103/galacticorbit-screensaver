@@ -54,4 +54,4 @@ Press Esc or Q to exit. Press F to toggle fullscreen, Space to pause, R to reset
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+GNU General Public License v3.0 (GPL-3.0). See [LICENSE](LICENSE).
