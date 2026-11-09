@@ -6,24 +6,25 @@ DEST="$ROOT/assets/planet-textures"
 BASE="https://www.solarsystemscope.com/textures/download"
 mkdir -p "$DEST"
 
-files=(
-  2k_sun.jpg
-  2k_mercury.jpg
-  2k_venus_surface.jpg
-  2k_earth_daymap.jpg
-  2k_mars.jpg
-  2k_jupiter.jpg
-  2k_saturn.jpg
-  2k_uranus.jpg
-  2k_neptune.jpg
+declare -A maps=(
+  [sun.jpg]=2k_sun.jpg
+  [mercury.jpg]=2k_mercury.jpg
+  [venus.jpg]=2k_venus_surface.jpg
+  [earth.jpg]=2k_earth_daymap.jpg
+  [mars.jpg]=2k_mars.jpg
+  [jupiter.jpg]=2k_jupiter.jpg
+  [saturn.jpg]=2k_saturn.jpg
+  [uranus.jpg]=2k_uranus.jpg
+  [neptune.jpg]=2k_neptune.jpg
 )
 
-for file in "${files[@]}"; do
-  if [[ ! -s "$DEST/$file" ]]; then
-    echo "Downloading $file"
-    curl --fail --location --retry 3 "$BASE/$file" -o "$DEST/$file"
+for target in "${!maps[@]}"; do
+  source="${maps[$target]}"
+  if [[ ! -s "$DEST/$target" ]]; then
+    echo "Downloading $source as $target"
+    curl --fail --location --retry 3 "$BASE/$source" -o "$DEST/$target"
   else
-    echo "Keeping existing $file"
+    echo "Keeping existing $target"
   fi
 done
 
