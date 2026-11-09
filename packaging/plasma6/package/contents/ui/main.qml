@@ -20,6 +20,15 @@ WallpaperItem {
         running: true
         onTriggered: shader.phase = DisplayGeometry.elapsedSeconds()
     }
+    Image { id: sunMap; source: "file:///usr/share/galacticorbit/planet-textures/sun.jpg"; visible: false; cache: true }
+    Image { id: mercuryMap; source: "file:///usr/share/galacticorbit/planet-textures/mercury.jpg"; visible: false; cache: true }
+    Image { id: venusMap; source: "file:///usr/share/galacticorbit/planet-textures/venus.jpg"; visible: false; cache: true }
+    Image { id: earthMap; source: "file:///usr/share/galacticorbit/planet-textures/earth.jpg"; visible: false; cache: true }
+    Image { id: marsMap; source: "file:///usr/share/galacticorbit/planet-textures/mars.jpg"; visible: false; cache: true }
+    Image { id: jupiterMap; source: "file:///usr/share/galacticorbit/planet-textures/jupiter.jpg"; visible: false; cache: true }
+    Image { id: saturnMap; source: "file:///usr/share/galacticorbit/planet-textures/saturn.jpg"; visible: false; cache: true }
+    Image { id: uranusMap; source: "file:///usr/share/galacticorbit/planet-textures/uranus.jpg"; visible: false; cache: true }
+    Image { id: neptuneMap; source: "file:///usr/share/galacticorbit/planet-textures/neptune.jpg"; visible: false; cache: true }
     ShaderEffect {
         id: shader
         anchors.fill: parent
@@ -28,7 +37,15 @@ WallpaperItem {
         property vector2d screenOrigin: Qt.vector2d(root.screenRect.x - root.desktopRect.x, root.screenRect.y - root.desktopRect.y)
         property vector2d screenSize: Qt.vector2d(root.width, root.height)
         property real rotationSpeed: root.rotationSpeed
-        property real showLabels: root.showLabels ? 1.0 : 0.0
+        property var sunTex: sunMap
+        property var mercuryTex: mercuryMap
+        property var venusTex: venusMap
+        property var earthTex: earthMap
+        property var marsTex: marsMap
+        property var jupiterTex: jupiterMap
+        property var saturnTex: saturnMap
+        property var uranusTex: uranusMap
+        property var neptuneTex: neptuneMap
         fragmentShader: "qrc:/org/zwiegnet/galacticorbit/shaders/galaxy.frag.qsb"
     }
 }
