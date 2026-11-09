@@ -243,8 +243,8 @@ void drawLabel(const std::string& label, float x, float y, float scale,
 void drawSagittariusA(float time) {
     // A luminous, tilted accretion disk surrounds a truly dark event horizon.
     for (int layer = 0; layer < 7; ++layer) {
-        const float rx = 0.070f + layer * 0.009f;
-        const float ry = 0.017f + layer * 0.002f;
+        const float rx = 0.024f + layer * 0.0032f;
+        const float ry = 0.0060f + layer * 0.0008f;
         glLineWidth(layer < 2 ? 5.0f : 2.0f);
         glColor4f(1.0f, 0.25f + layer * 0.075f, 0.035f, 0.10f + layer * 0.018f);
         glBegin(GL_LINE_LOOP);
@@ -263,117 +263,130 @@ void drawSagittariusA(float time) {
     // Opaque event horizon cuts through the bright disk.
     glDisable(GL_BLEND);
     glColor4f(0.001f, 0.001f, 0.004f, 1.0f);
-    circle(0.0f, 0.0f, 0.025f, 128);
+    circle(0.0f, 0.0f, 0.009f, 128);
     glEnable(GL_BLEND);
     glColor4f(1.0f, 0.78f, 0.38f, 0.72f);
-    ring(0.0f, 0.0f, 0.028f, 1.0f, 0.76f, 0.42f, 0.72f);
+    ring(0.0f, 0.0f, 0.012f, 1.0f, 0.76f, 0.42f, 0.72f);
     glColor4f(0.72f, 0.84f, 1.0f, 0.20f);
-    ring(0.0f, 0.0f, 0.036f, 0.72f, 0.84f, 1.0f, 0.20f);
+    ring(0.0f, 0.0f, 0.018f, 0.72f, 0.84f, 1.0f, 0.20f);
     drawLabel("SAGITTARIUS A*", -0.16f, 0.075f, 0.0058f, 0.88f, true);
 }
 
 void drawGalaxy(float time, float aspect) {
-    // The arm structure rotates clockwise slowly around a stable galactic center.
+    // Wide, gently inclined Milky Way composition spanning the complete desktop.
+    // Coordinates are deliberately elliptical: the reference is a broad face-on disk.
     const float rotation = -time * 0.11f;
-    const float maxRadius = 0.86f;
-    const float galaxyXScale = std::max(1.0f, aspect * 0.98f);
-    const float pitch = 0.31f;
+    const float maxRadius = 0.66f;
+    const float xScale = aspect * 2.30f;
+    const float yScale = 0.72f;
+    const float pitch = 0.285f;
     const int arms = 4;
 
-    // Soft galactic core.
-    for (int i = 18; i >= 1; --i) {
-        const float r = 0.018f * static_cast<float>(i);
-        const float alpha = 0.010f + 0.0025f * static_cast<float>(19 - i);
-        glColor4f(0.72f, 0.62f, 1.0f, alpha);
+    // Soft warm central bulge and diffuse galactic disk.
+    for (int i = 36; i >= 1; --i) {
+        const float r = 0.010f * static_cast<float>(i);
+        const float alpha = 0.004f + 0.0012f * static_cast<float>(37 - i);
+        glColor4f(0.86f, 0.55f, 0.34f, alpha);
         circle(0.0f, 0.0f, r, 64);
     }
 
-    // Dusty spiral arms, built from layered points. The arm rotation is intentionally subtle.
-    glPointSize(2.0f);
+    // Dense, mottled stellar clouds following four logarithmic major arms.
+    // Deterministic pseudo-random offsets keep the sky stable between frames.
+    glPointSize(1.7f);
     glBegin(GL_POINTS);
     for (int arm = 0; arm < arms; ++arm) {
-        const float base = static_cast<float>(2.0 * PI * arm / arms) + static_cast<float>(PI * 0.25);
-        for (int i = 0; i < 2400; ++i) {
-            const float u = static_cast<float>(i) / 2399.0f;
-            const float radius = 0.065f + u * (maxRadius - 0.065f);
+        const float base = static_cast<float>(2.0 * PI * arm / arms) + 0.52f;
+        for (int i = 0; i < 8500; ++i) {
+            const float u = static_cast<float>(i) / 8499.0f;
+            const float radius = 0.075f + u * (maxRadius - 0.075f);
             const float angle = base + std::log(radius / 0.075f) / pitch + rotation;
-            const float scatter = std::sin(i * 12.9898f + arm * 78.233f) * 0.012f;
-            const float r = radius + scatter;
-            const float x = std::cos(angle) * r;
-            const float y = std::sin(angle) * r;
-            const float fade = 1.0f - u * 0.52f;
-            const float dust = 0.5f + 0.5f * std::sin(i * 0.071f + arm);
-            glColor4f(0.36f + 0.28f * dust, 0.43f + 0.25f * dust,
-                      0.92f, 0.17f * fade);
-            glVertex2f(x * galaxyXScale, y);
+            const float n1 = std::sin(i * 127.1f + arm * 311.7f) * 43758.5453f;
+            const float n2 = std::sin(i * 269.5f + arm * 183.3f) * 24634.6345f;
+            const float jitter = (n1 - std::floor(n1) - 0.5f) * (0.010f + radius * 0.018f);
+            const float spread = (n2 - std::floor(n2) - 0.5f) * (0.020f + radius * 0.030f);
+            const float r = radius + jitter;
+            const float a = angle + spread / std::max(radius, 0.05f);
+            const float x = std::cos(a) * r * xScale;
+            const float y = std::sin(a) * r * yScale;
+            const float dust = 0.5f + 0.5f * std::sin(i * 0.071f + arm * 2.1f);
+            const float fade = 0.78f - u * 0.34f;
+            glColor4f(0.25f + 0.36f * dust, 0.32f + 0.34f * dust,
+                      0.72f + 0.25f * dust, 0.12f * fade);
+            glVertex2f(x, y);
         }
     }
     glEnd();
 
-    // Bright star-forming knots along the arms.
+    // Broken, luminous star-forming regions and nebular knots on the arms.
     for (int arm = 0; arm < arms; ++arm) {
-        const float base = static_cast<float>(2.0 * PI * arm / arms);
-        for (int knot = 0; knot < 10; ++knot) {
-            const float radius = 0.18f + knot * 0.057f;
+        const float base = static_cast<float>(2.0 * PI * arm / arms) + 0.52f;
+        for (int knot = 0; knot < 18; ++knot) {
+            const float radius = 0.16f + knot * 0.027f;
             const float angle = base + std::log(radius / 0.075f) / pitch + rotation;
-            const float x = std::cos(angle) * radius * galaxyXScale;
-            const float y = std::sin(angle) * radius;
-            glColor4f(0.45f, 0.58f, 1.0f, 0.055f);
-            circle(x, y, 0.025f, 24);
-            glColor4f(0.78f, 0.82f, 1.0f, 0.22f);
-            circle(x, y, 0.004f, 12);
+            const float x = std::cos(angle) * radius * xScale;
+            const float y = std::sin(angle) * radius * yScale;
+            const float pulse = 0.65f + 0.35f * std::sin(knot * 8.3f + arm * 3.7f);
+            glColor4f(0.30f, 0.48f, 0.92f, 0.045f * pulse);
+            circle(x, y, 0.040f, 28);
+            glColor4f(0.95f, 0.48f, 0.30f, 0.10f * pulse);
+            circle(x, y, 0.014f, 18);
+            glColor4f(0.80f, 0.88f, 1.0f, 0.22f * pulse);
+            circle(x, y, 0.0035f, 12);
         }
     }
 
-
-    // The Orion Spur is a shorter local branch between the Sagittarius and Perseus arms.
-    const float spurBase = 2.35f + rotation;
+    // Orion Spur is a real local branch, not a detached ring. Its centerline
+    // uses the same pattern rotation as the major arms and the Sun.
     std::vector<std::pair<float, float>> spurPoints;
-    for (int i = 0; i <= 900; ++i) {
-        const float u = static_cast<float>(i) / 900.0f;
-        const float radius = 0.43f + u * 0.43f;
-        const float angle = spurBase + std::log(radius / 0.66f) / pitch;
-        const float x = std::cos(angle) * radius * galaxyXScale;
-        const float y = std::sin(angle) * radius;
-        spurPoints.emplace_back(x, y);
+    for (int i = 0; i <= 700; ++i) {
+        const float u = static_cast<float>(i) / 700.0f;
+        const float radius = 0.30f + u * 0.32f;
+        const float angle = 2.35f + std::log(radius / 0.48f) / pitch + rotation;
+        spurPoints.emplace_back(std::cos(angle) * radius * xScale,
+                                std::sin(angle) * radius * yScale);
     }
-    glowLine(spurPoints, 0.36f, 0.70f, 1.0f, 0.36f, 2.0f);
-    drawLabel("ORION SPUR", -0.94f, 0.73f, 0.0070f, 0.96f, true);
+    glowLine(spurPoints, 0.34f, 0.58f, 0.96f, 0.32f, 2.2f);
 
-    // Other major arms are identified quietly so they read as contextual cartography.
-    drawLabel("PERSEUS ARM", 0.46f, 0.76f, 0.0058f, 0.34f);
-    drawLabel("SAGITTARIUS ARM", -0.94f, -0.49f, 0.0058f, 0.31f);
-    drawLabel("SCUTUM-CENTAURUS ARM", 0.42f, -0.78f, 0.0051f, 0.27f);
-    drawLabel("NORMA ARM", 0.78f, 0.06f, 0.0058f, 0.27f);
-
-    // A restrained galactic boundary keeps the whole composition visually contained.
-    glLineWidth(1.0f);
-    glColor4f(0.32f, 0.38f, 0.72f, 0.10f);
-    glBegin(GL_LINE_LOOP);
-    for (int i = 0; i < 128; ++i) {
-        const float a = static_cast<float>(2.0 * PI * i / 128);
-        glVertex2f(std::cos(a) * maxRadius * galaxyXScale, std::sin(a) * maxRadius);
+    // A subtle outer stellar haze gives the disk a soft photographic edge.
+    glPointSize(1.0f);
+    glBegin(GL_POINTS);
+    for (int i = 0; i < 12000; ++i) {
+        const float a = i * 2.3999632f;
+        const float u = std::fmod(i * 0.6180339f, 1.0f);
+        const float radius = 0.12f + std::sqrt(u) * 0.53f;
+        const float armNoise = 0.5f + 0.5f * std::sin(a * 2.7f + std::log(radius) * 9.0f);
+        const float x = std::cos(a) * radius * xScale;
+        const float y = std::sin(a) * radius * yScale;
+        glColor4f(0.34f + 0.24f * armNoise, 0.40f + 0.22f * armNoise,
+                  0.76f + 0.20f * armNoise, 0.018f * (1.0f - u * 0.45f));
+        glVertex2f(x, y);
     }
     glEnd();
-}
 
+    // Quiet arm labels remain secondary to the galaxy itself.
+    drawLabel("ORION SPUR", -0.92f, 0.60f, 0.0065f, 0.82f, true);
+    drawLabel("PERSEUS ARM", 0.78f, 0.55f, 0.0055f, 0.30f);
+    drawLabel("SAGITTARIUS ARM", -1.32f, -0.28f, 0.0055f, 0.28f);
+    drawLabel("SCUTUM-CENTAURUS ARM", 0.15f, -0.48f, 0.0048f, 0.26f);
+    drawLabel("NORMA ARM", 1.18f, 0.02f, 0.0055f, 0.25f);
+}
 void drawSunAndPlanets(double time, double speed, float aspect, const std::array<GLuint, 9>& textures) {
     // Keep the Sun physically attached to the Orion Spur: it shares the
     // galaxy's rotation and sits directly on the spur's centerline at r=0.66.
     // There is deliberately no separate circular orbit or detached golden trail.
     const float galaxyRotation = -static_cast<float>(time * 0.11);
-    constexpr float sunRadius = 0.66f;
+    constexpr float sunRadius = 0.48f;
     // The Sun's galactic orbit is distinct from the spiral-pattern speed.
     // A small differential rate lets it drift through the Orion Spur over time.
     const float spurAngle = 2.35f + galaxyRotation + static_cast<float>(time * 0.010);
-    const float sunX = std::cos(spurAngle) * sunRadius * std::max(1.0f, aspect * 0.98f);
-    const float sunY = std::sin(spurAngle) * sunRadius;
+    const float sunX = std::cos(spurAngle) * sunRadius * aspect * 2.30f;
+    const float sunY = std::sin(spurAngle) * sunRadius * 0.72f;
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // A soft gravitational field: nested, subtly distorted contours around the Sun.
     for (int layer = 12; layer >= 1; --layer) {
-        const float r = 0.055f + layer * 0.018f;
+        const float r = 0.020f + layer * 0.006f;
         glColor4f(1.0f, 0.55f, 0.16f, 0.010f + (12 - layer) * 0.0015f);
         glBegin(GL_LINE_LOOP);
         for (int i = 0; i < 144; ++i) {
@@ -387,15 +400,15 @@ void drawSunAndPlanets(double time, double speed, float aspect, const std::array
 
     // Layered corona and bright photosphere make the Sun the visual anchor.
     for (int i = 16; i >= 1; --i) {
-        const float r = 0.012f + i * 0.0065f;
+        const float r = 0.006f + i * 0.0028f;
         glColor4f(1.0f, 0.34f + 0.025f * i, 0.06f, 0.012f);
         circle(sunX, sunY, r, 64);
     }
     glColor4f(1.0f, 0.58f, 0.12f, 0.42f);
-    circle(sunX, sunY, 0.055f, 64);
-    drawTexturedSphere(sunX, sunY, 0.040f, textures[0],
+    circle(sunX, sunY, 0.022f, 64);
+    drawTexturedSphere(sunX, sunY, 0.016f, textures[0],
                        static_cast<float>(time * 0.035), 1.25f);
-    drawLabel("SUN", sunX + 0.052f, sunY + 0.035f, 0.0055f, 0.88f, true);
+    drawLabel("SUN", sunX + 0.024f, sunY + 0.022f, 0.0048f, 0.88f, true);
 
     struct PlanetData {
         float orbit, eccentricity, speed, phase, radius;
