@@ -2,10 +2,12 @@
 #include <SDL3/SDL_opengl.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
 #include <iterator>
+#include <map>
 #include <random>
 #include <string>
 #include <vector>
@@ -91,10 +93,123 @@ void drawStars(const std::vector<Star>& stars) {
     glEnd();
 }
 
+
+const std::array<const char*, 7>& glyph(char c) {
+    static const std::array<const char*, 7> blank = {"00000","00000","00000","00000","00000","00000","00000"};
+    static const std::map<char, std::array<const char*, 7>> font = {
+        {'A',{"01110","10001","10001","11111","10001","10001","10001"}},
+        {'B',{"11110","10001","10001","11110","10001","10001","11110"}},
+        {'C',{"01111","10000","10000","10000","10000","10000","01111"}},
+        {'D',{"11110","10001","10001","10001","10001","10001","11110"}},
+        {'E',{"11111","10000","10000","11110","10000","10000","11111"}},
+        {'F',{"11111","10000","10000","11110","10000","10000","10000"}},
+        {'G',{"01111","10000","10000","10111","10001","10001","01111"}},
+        {'H',{"10001","10001","10001","11111","10001","10001","10001"}},
+        {'I',{"11111","00100","00100","00100","00100","00100","11111"}},
+        {'J',{"00111","00010","00010","00010","10010","10010","01100"}},
+        {'K',{"10001","10010","10100","11000","10100","10010","10001"}},
+        {'L',{"10000","10000","10000","10000","10000","10000","11111"}},
+        {'M',{"10001","11011","10101","10101","10001","10001","10001"}},
+        {'N',{"10001","11001","11001","10101","10011","10011","10001"}},
+        {'O',{"01110","10001","10001","10001","10001","10001","01110"}},
+        {'P',{"11110","10001","10001","11110","10000","10000","10000"}},
+        {'Q',{"01110","10001","10001","10001","10101","10010","01101"}},
+        {'R',{"11110","10001","10001","11110","10100","10010","10001"}},
+        {'S',{"01111","10000","10000","01110","00001","00001","11110"}},
+        {'T',{"11111","00100","00100","00100","00100","00100","00100"}},
+        {'U',{"10001","10001","10001","10001","10001","10001","01110"}},
+        {'V',{"10001","10001","10001","10001","10001","01010","00100"}},
+        {'W',{"10001","10001","10001","10101","10101","11011","10001"}},
+        {'X',{"10001","10001","01010","00100","01010","10001","10001"}},
+        {'Y',{"10001","10001","01010","00100","00100","00100","00100"}},
+        {'Z',{"11111","00001","00010","00100","01000","10000","11111"}},
+        {'0',{"01110","10001","10011","10101","11001","10001","01110"}},
+        {'1',{"00100","01100","00100","00100","00100","00100","01110"}},
+        {'2',{"01110","10001","00001","00010","00100","01000","11111"}},
+        {'3',{"11110","00001","00001","01110","00001","00001","11110"}},
+        {'4',{"00010","00110","01010","10010","11111","00010","00010"}},
+        {'5',{"11111","10000","10000","11110","00001","00001","11110"}},
+        {'6',{"01110","10000","10000","11110","10001","10001","01110"}},
+        {'7',{"11111","00001","00010","00100","01000","01000","01000"}},
+        {'8',{"01110","10001","10001","01110","10001","10001","01110"}},
+        {'9',{"01110","10001","10001","01111","00001","00001","01110"}},
+        {'-',{"00000","00000","00000","11111","00000","00000","00000"}},
+        {'*',{"00000","10101","01110","11111","01110","10101","00000"}},
+        {'.',{"00000","00000","00000","00000","00000","00110","00110"}},
+        {':',{"00000","00110","00110","00000","00110","00110","00000"}}
+    };
+    const auto it = font.find(c);
+    return it == font.end() ? blank : it->second;
+}
+
+void drawText(const std::string& text, float x, float y, float scale,
+              float red, float green, float blue, float alpha) {
+    glColor4f(red, green, blue, alpha);
+    glBegin(GL_QUADS);
+    float cursor = x;
+    for (char c : text) {
+        const auto& rows = glyph(c);
+        for (int row = 0; row < 7; ++row) {
+            for (int col = 0; col < 5; ++col) {
+                if (rows[row][col] != '1') continue;
+                const float left = cursor + col * scale;
+                const float top = y - row * scale;
+                glVertex2f(left, top);
+                glVertex2f(left + scale * 0.82f, top);
+                glVertex2f(left + scale * 0.82f, top - scale * 0.82f);
+                glVertex2f(left, top - scale * 0.82f);
+            }
+        }
+        cursor += scale * 6.0f;
+    }
+    glEnd();
+}
+
+void drawLabel(const std::string& label, float x, float y, float scale,
+               float alpha, bool bright = false) {
+    drawText(label, x + 0.004f, y - 0.004f, scale, 0.12f, 0.20f, 0.42f, alpha * 0.45f);
+    drawText(label, x, y, scale,
+             bright ? 0.66f : 0.42f,
+             bright ? 0.84f : 0.59f,
+             bright ? 1.00f : 0.82f, alpha);
+}
+
+void drawSagittariusA(float time) {
+    // A luminous, tilted accretion disk surrounds a truly dark event horizon.
+    for (int layer = 0; layer < 7; ++layer) {
+        const float rx = 0.105f + layer * 0.012f;
+        const float ry = 0.026f + layer * 0.004f;
+        glLineWidth(layer < 2 ? 5.0f : 2.0f);
+        glColor4f(1.0f, 0.25f + layer * 0.075f, 0.035f, 0.10f + layer * 0.018f);
+        glBegin(GL_LINE_LOOP);
+        for (int i = 0; i < 180; ++i) {
+            const float a = static_cast<float>(2.0 * PI * i / 180);
+            const float wobble = 1.0f + 0.055f * std::sin(3.0f * a + static_cast<float>(time * 0.35));
+            const float xx = std::cos(a) * rx * wobble;
+            const float yy = std::sin(a) * ry * wobble;
+            const float tilt = -0.20f;
+            glVertex2f(xx * std::cos(tilt) - yy * std::sin(tilt),
+                       xx * std::sin(tilt) + yy * std::cos(tilt));
+        }
+        glEnd();
+    }
+    glLineWidth(1.0f);
+    // Opaque event horizon cuts through the bright disk.
+    glDisable(GL_BLEND);
+    glColor4f(0.001f, 0.001f, 0.004f, 1.0f);
+    circle(0.0f, 0.0f, 0.043f, 96);
+    glEnable(GL_BLEND);
+    glColor4f(1.0f, 0.78f, 0.38f, 0.72f);
+    ring(0.0f, 0.0f, 0.050f, 1.0f, 0.76f, 0.42f, 0.72f);
+    glColor4f(0.72f, 0.84f, 1.0f, 0.20f);
+    ring(0.0f, 0.0f, 0.070f, 0.72f, 0.84f, 1.0f, 0.20f);
+    drawLabel("SAGITTARIUS A*", -0.18f, 0.15f, 0.0060f, 0.98f, true);
+}
+
 void drawGalaxy(float time, float aspect) {
     // The arm structure rotates clockwise slowly around a stable galactic center.
     const float rotation = -time * 0.018f;
-    const float maxRadius = 0.78f;
+    const float maxRadius = 0.86f;
     const float galaxyXScale = std::max(1.0f, aspect * 0.92f);
     const float pitch = 0.31f;
     const int arms = 4;
@@ -144,6 +259,27 @@ void drawGalaxy(float time, float aspect) {
         }
     }
 
+
+    // The Orion Spur is a shorter local branch between the Sagittarius and Perseus arms.
+    const float spurBase = 2.35f + rotation;
+    std::vector<std::pair<float, float>> spurPoints;
+    for (int i = 0; i <= 900; ++i) {
+        const float u = static_cast<float>(i) / 900.0f;
+        const float radius = 0.43f + u * 0.43f;
+        const float angle = spurBase + std::log(radius / 0.66f) / pitch;
+        const float x = std::cos(angle) * radius * galaxyXScale;
+        const float y = std::sin(angle) * radius;
+        spurPoints.emplace_back(x, y);
+    }
+    glowLine(spurPoints, 0.36f, 0.70f, 1.0f, 0.36f, 2.0f);
+    drawLabel("ORION SPUR", -0.94f, 0.73f, 0.0070f, 0.96f, true);
+
+    // Other major arms are identified quietly so they read as contextual cartography.
+    drawLabel("PERSEUS ARM", 0.46f, 0.76f, 0.0058f, 0.34f);
+    drawLabel("SAGITTARIUS ARM", -0.94f, -0.49f, 0.0058f, 0.31f);
+    drawLabel("SCUTUM-CENTAURUS ARM", 0.42f, -0.78f, 0.0051f, 0.27f);
+    drawLabel("NORMA ARM", 0.78f, 0.06f, 0.0058f, 0.27f);
+
     // A restrained galactic boundary keeps the whole composition visually contained.
     glLineWidth(1.0f);
     glColor4f(0.32f, 0.38f, 0.72f, 0.10f);
@@ -158,7 +294,7 @@ void drawGalaxy(float time, float aspect) {
 void drawSunAndPlanets(double time, double speed, float aspect) {
     const double sunRate = 0.22 * speed;
     const double sunAngle = 2.35 - time * sunRate;
-    constexpr float sunOrbit = 0.47f;
+    constexpr float sunOrbit = 0.59f;
     const float sunOrbitX = sunOrbit * std::max(1.0f, aspect * 0.55f);
     const float sunX = std::cos(static_cast<float>(sunAngle)) * sunOrbitX;
     const float sunY = std::sin(static_cast<float>(sunAngle)) * sunOrbit;
@@ -226,8 +362,8 @@ void drawSunAndPlanets(double time, double speed, float aspect) {
         const auto& p = planets[index];
         const double a = p.phase + time * p.speed * speed;
         const float eccentric = 1.0f - p.eccentricity * std::cos(static_cast<float>(a));
-        const float orbitX = p.orbit * eccentric;
-        const float orbitY = p.orbit * 0.82f * eccentric;
+        const float orbitX = p.orbit * 1.25f * eccentric;
+        const float orbitY = p.orbit * 1.25f * 0.82f * eccentric;
         const float px = sunX + std::cos(static_cast<float>(a)) * orbitX;
         const float py = sunY + std::sin(static_cast<float>(a)) * orbitY;
 
@@ -260,7 +396,7 @@ void drawSunAndPlanets(double time, double speed, float aspect) {
         glColor4f(p.r, p.g, p.b, 0.14f);
         circle(px, py, p.radius * 2.5f, 32);
         glColor4f(p.r * 0.42f, p.g * 0.42f, p.b * 0.48f, 1.0f);
-        circle(px, py, p.radius, 40);
+        circle(px, py, p.radius * 1.35f, 40);
         glColor4f(p.r, p.g, p.b, 1.0f);
         circle(px - p.radius * 0.18f, py + p.radius * 0.16f,
                p.radius * 0.78f, 36);
@@ -303,6 +439,7 @@ void render(const std::vector<Star>& stars, int width, int height,
 
     drawStars(stars);
     drawGalaxy(static_cast<float>(elapsed), aspect);
+    drawSagittariusA(static_cast<float>(elapsed));
     drawSunAndPlanets(elapsed, speed, aspect);
 
     glDisable(GL_BLEND);
