@@ -1,6 +1,6 @@
 Name:           galacticorbit-screensaver
 Version:        0.1.0
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Animated Milky Way background for KDE Plasma 6 lock screen
 License:        GPL-3.0-only
 URL:            https://github.com/azwieg103/galacticorbit-screensaver
@@ -42,14 +42,31 @@ bash scripts/download-planet-textures.sh
 %license LICENSE
 %doc README.md
 %{_bindir}/galacticorbit-screensaver
-%{_datadir}/galacticorbit/planet-textures/*
-%{_datadir}/plasma/wallpapers/org.zwiegnet.galacticorbit/metadata.json
-%{_datadir}/plasma/wallpapers/org.zwiegnet.galacticorbit/contents/config/main.xml
-%{_datadir}/plasma/wallpapers/org.zwiegnet.galacticorbit/contents/ui/main.qml
-%{_libdir}/qt6/qml/org/zwiegnet/galacticorbit/geometry/qmldir
-%{_libdir}/qt6/qml/org/zwiegnet/galacticorbit/geometry/libgalacticorbitgeometryplugin.so
+
+# Publicly traversable texture paths; greeter runs outside the user's session.
+%attr(755,root,root) %dir %{_datadir}/galacticorbit
+%attr(755,root,root) %dir %{_datadir}/galacticorbit/planet-textures
+%attr(644,root,root) %{_datadir}/galacticorbit/planet-textures/*
+
+# Plasma wallpaper package directories must be readable by the lock-screen greeter.
+%attr(755,root,root) %dir %{_datadir}/plasma/wallpapers/org.zwiegnet.galacticorbit
+%attr(755,root,root) %dir %{_datadir}/plasma/wallpapers/org.zwiegnet.galacticorbit/contents
+%attr(755,root,root) %dir %{_datadir}/plasma/wallpapers/org.zwiegnet.galacticorbit/contents/config
+%attr(755,root,root) %dir %{_datadir}/plasma/wallpapers/org.zwiegnet.galacticorbit/contents/ui
+%attr(644,root,root) %{_datadir}/plasma/wallpapers/org.zwiegnet.galacticorbit/metadata.json
+%attr(644,root,root) %{_datadir}/plasma/wallpapers/org.zwiegnet.galacticorbit/contents/config/main.xml
+%attr(644,root,root) %{_datadir}/plasma/wallpapers/org.zwiegnet.galacticorbit/contents/ui/main.qml
+
+# Qt must be able to traverse the custom QML module path as the greeter user.
+%attr(755,root,root) %dir %{_libdir}/qt6/qml/org/zwiegnet/galacticorbit
+%attr(755,root,root) %dir %{_libdir}/qt6/qml/org/zwiegnet/galacticorbit/geometry
+%attr(644,root,root) %{_libdir}/qt6/qml/org/zwiegnet/galacticorbit/geometry/qmldir
+%attr(755,root,root) %{_libdir}/qt6/qml/org/zwiegnet/galacticorbit/geometry/libgalacticorbitgeometryplugin.so
 
 %changelog
+* Mon Nov 09 2026 Zwiegnet <programming@zwiegnet.com> - 0.1.0-3
+- Set explicit root-owned Unix permissions for texture, Plasma wallpaper, and Qt QML directories.
+- Ensure lock-screen greeter can traverse directories and read installed textures and QML files.
 * Mon Nov 09 2026 Zwiegnet <programming@zwiegnet.com> - 0.1.0-2
 - Clarify and package Galactic Orbit as a selectable KScreenLocker background.
 - Add explicit Plasma wallpaper package version metadata.
