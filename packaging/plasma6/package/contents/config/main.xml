@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE kcfg SYSTEM "kcfg.dtd">
+<kcfg><group name="General">
+  <entry name="rotationSpeed" type="Int"><default>100</default></entry>
+  <entry name="showLabels" type="Bool"><default>true</default></entry>
+</group></kcfg>
