@@ -94,6 +94,7 @@ void drawGalaxy(float time, float aspect) {
     // The arm structure rotates clockwise slowly around a stable galactic center.
     const float rotation = -time * 0.018f;
     const float maxRadius = 0.78f;
+    const float galaxyXScale = std::max(1.0f, aspect * 0.92f);
     const float pitch = 0.31f;
     const int arms = 4;
 
@@ -122,7 +123,7 @@ void drawGalaxy(float time, float aspect) {
             const float dust = 0.5f + 0.5f * std::sin(i * 0.071f + arm);
             glColor4f(0.36f + 0.28f * dust, 0.43f + 0.25f * dust,
                       0.92f, 0.08f * fade);
-            glVertex2f(x, y);
+            glVertex2f(x * galaxyXScale, y);
         }
     }
     glEnd();
@@ -133,7 +134,7 @@ void drawGalaxy(float time, float aspect) {
         for (int knot = 0; knot < 10; ++knot) {
             const float radius = 0.18f + knot * 0.057f;
             const float angle = base + std::log(radius / 0.075f) / pitch + rotation;
-            const float x = std::cos(angle) * radius;
+            const float x = std::cos(angle) * radius * galaxyXScale;
             const float y = std::sin(angle) * radius;
             glColor4f(0.45f, 0.58f, 1.0f, 0.055f);
             circle(x, y, 0.025f, 24);
@@ -143,15 +144,22 @@ void drawGalaxy(float time, float aspect) {
     }
 
     // A restrained galactic boundary keeps the whole composition visually contained.
-    ring(0.0f, 0.0f, maxRadius, 0.32f, 0.38f, 0.72f, 0.10f);
-    (void)aspect;
+    glLineWidth(1.0f);
+    glColor4f(0.32f, 0.38f, 0.72f, 0.10f);
+    glBegin(GL_LINE_LOOP);
+    for (int i = 0; i < 128; ++i) {
+        const float a = static_cast<float>(2.0 * PI * i / 128);
+        glVertex2f(std::cos(a) * maxRadius * galaxyXScale, std::sin(a) * maxRadius);
+    }
+    glEnd();
 }
 
-void drawSunAndPlanets(double time, double speed) {
+void drawSunAndPlanets(double time, double speed, float aspect) {
     const double sunRate = 0.22 * speed;
     const double sunAngle = 2.35 - time * sunRate;
     constexpr float sunOrbit = 0.47f;
-    const float sunX = std::cos(static_cast<float>(sunAngle)) * sunOrbit;
+    const float sunOrbitX = sunOrbit * std::max(1.0f, aspect * 0.55f);
+    const float sunX = std::cos(static_cast<float>(sunAngle)) * sunOrbitX;
     const float sunY = std::sin(static_cast<float>(sunAngle)) * sunOrbit;
 
     // The persistent trail shows the Sun's path around the galactic center.
@@ -163,7 +171,7 @@ void drawSunAndPlanets(double time, double speed) {
         const double fraction = static_cast<double>(i) / (trailSamples - 1);
         const double past = time - trailSeconds * (1.0 - fraction);
         const double a = 2.35 - past * sunRate;
-        trail.emplace_back(std::cos(static_cast<float>(a)) * sunOrbit,
+        trail.emplace_back(std::cos(static_cast<float>(a)) * sunOrbitX,
                            std::sin(static_cast<float>(a)) * sunOrbit);
     }
     glowLine(trail, 1.0f, 0.66f, 0.20f, 0.92f, 2.1f);
@@ -223,7 +231,7 @@ void render(const std::vector<Star>& stars, int width, int height,
 
     drawStars(stars);
     drawGalaxy(static_cast<float>(elapsed), aspect);
-    drawSunAndPlanets(elapsed, speed);
+    drawSunAndPlanets(elapsed, speed, aspect);
 
     glDisable(GL_BLEND);
 }
