@@ -243,8 +243,8 @@ void drawLabel(const std::string& label, float x, float y, float scale,
 void drawSagittariusA(float time) {
     // A luminous, tilted accretion disk surrounds a truly dark event horizon.
     for (int layer = 0; layer < 7; ++layer) {
-        const float rx = 0.205f + layer * 0.023f;
-        const float ry = 0.052f + layer * 0.008f;
+        const float rx = 0.070f + layer * 0.009f;
+        const float ry = 0.017f + layer * 0.002f;
         glLineWidth(layer < 2 ? 5.0f : 2.0f);
         glColor4f(1.0f, 0.25f + layer * 0.075f, 0.035f, 0.10f + layer * 0.018f);
         glBegin(GL_LINE_LOOP);
@@ -263,13 +263,13 @@ void drawSagittariusA(float time) {
     // Opaque event horizon cuts through the bright disk.
     glDisable(GL_BLEND);
     glColor4f(0.001f, 0.001f, 0.004f, 1.0f);
-    circle(0.0f, 0.0f, 0.118f, 128);
+    circle(0.0f, 0.0f, 0.025f, 128);
     glEnable(GL_BLEND);
     glColor4f(1.0f, 0.78f, 0.38f, 0.72f);
-    ring(0.0f, 0.0f, 0.128f, 1.0f, 0.76f, 0.42f, 0.72f);
+    ring(0.0f, 0.0f, 0.028f, 1.0f, 0.76f, 0.42f, 0.72f);
     glColor4f(0.72f, 0.84f, 1.0f, 0.20f);
-    ring(0.0f, 0.0f, 0.154f, 0.72f, 0.84f, 1.0f, 0.20f);
-    drawLabel("SAGITTARIUS A*", -0.24f, 0.205f, 0.0072f, 0.99f, true);
+    ring(0.0f, 0.0f, 0.036f, 0.72f, 0.84f, 1.0f, 0.20f);
+    drawLabel("SAGITTARIUS A*", -0.16f, 0.075f, 0.0058f, 0.88f, true);
 }
 
 void drawGalaxy(float time, float aspect) {
