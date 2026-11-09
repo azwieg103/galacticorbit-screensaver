@@ -416,14 +416,14 @@ void drawSunAndPlanets(double time, double speed, float aspect, const std::array
         bool rings;
     };
     const PlanetData planets[] = {
-        {0.060f, 0.08f, 2.75f, 0.4f, 0.0080f, 0.72f, 0.78f, 0.86f, false},
-        {0.088f, 0.05f, 1.95f, 2.1f, 0.0100f, 0.94f, 0.62f, 0.34f, false},
-        {0.122f, 0.07f, 1.42f, 4.2f, 0.0120f, 0.30f, 0.68f, 1.00f, false},
-        {0.162f, 0.10f, 1.02f, 5.1f, 0.0105f, 0.88f, 0.38f, 0.27f, false},
-        {0.218f, 0.06f, 0.61f, 1.4f, 0.0180f, 0.90f, 0.72f, 0.48f, true},
-        {0.278f, 0.08f, 0.39f, 3.3f, 0.0150f, 0.76f, 0.68f, 0.54f, true},
-        {0.335f, 0.05f, 0.27f, 0.8f, 0.0130f, 0.45f, 0.82f, 0.88f, true},
-        {0.385f, 0.04f, 0.20f, 2.8f, 0.0125f, 0.32f, 0.48f, 0.90f, false}
+        {0.020f, 0.08f, 2.75f, 0.4f, 0.0028f, 0.72f, 0.78f, 0.86f, false},
+        {0.029f, 0.05f, 1.95f, 2.1f, 0.0032f, 0.94f, 0.62f, 0.34f, false},
+        {0.041f, 0.07f, 1.42f, 4.2f, 0.0038f, 0.30f, 0.68f, 1.00f, false},
+        {0.054f, 0.10f, 1.02f, 5.1f, 0.0034f, 0.88f, 0.38f, 0.27f, false},
+        {0.073f, 0.06f, 0.61f, 1.4f, 0.0060f, 0.90f, 0.72f, 0.48f, true},
+        {0.093f, 0.08f, 0.39f, 3.3f, 0.0050f, 0.76f, 0.68f, 0.54f, true},
+        {0.112f, 0.05f, 0.27f, 0.8f, 0.0044f, 0.45f, 0.82f, 0.88f, true},
+        {0.128f, 0.04f, 0.20f, 2.8f, 0.0042f, 0.32f, 0.48f, 0.90f, false}
     };
 
     for (std::size_t index = 0; index < std::size(planets); ++index) {
