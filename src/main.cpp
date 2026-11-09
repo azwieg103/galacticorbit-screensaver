@@ -1,5 +1,5 @@
-#include <SDL.h>
-#include <SDL_opengl.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_opengl.h>
 
 #include <algorithm>
 #include <cmath>
@@ -265,7 +265,7 @@ Options parseArgs(int argc, char** argv) {
 
 int main(int argc, char** argv) {
     const Options options = parseArgs(argc, argv);
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER)) {
         std::cerr << "SDL_Init failed: " << SDL_GetError() << '\n';
         return 1;
     }
@@ -280,20 +280,22 @@ int main(int argc, char** argv) {
     int y = SDL_WINDOWPOS_CENTERED;
     int width = 1280;
     int height = 720;
-    Uint32 flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI;
+    SDL_WindowFlags flags = SDL_WINDOW_OPENGL | SDL_WINDOW_HIGH_PIXEL_DENSITY;
 
     if (options.span) {
         int minX = 0, minY = 0, maxX = 0, maxY = 0;
-        const int displays = SDL_GetNumVideoDisplays();
-        for (int i = 0; i < displays; ++i) {
+        int displayCount = 0;
+        SDL_DisplayID* displays = SDL_GetDisplays(&displayCount);
+        for (int i = 0; displays && i < displayCount; ++i) {
             SDL_Rect bounds{};
-            if (SDL_GetDisplayBounds(i, &bounds) == 0) {
+            if (SDL_GetDisplayBounds(displays[i], &bounds)) {
                 minX = std::min(minX, bounds.x);
                 minY = std::min(minY, bounds.y);
                 maxX = std::max(maxX, bounds.x + bounds.w);
                 maxY = std::max(maxY, bounds.y + bounds.h);
             }
         }
+        SDL_free(displays);
         x = minX;
         y = minY;
         width = std::max(1280, maxX - minX);
@@ -303,10 +305,11 @@ int main(int argc, char** argv) {
 
     // Prefer one borderless surface spanning the virtual desktop. Fullscreen
     // is reserved for the single-display fallback when span mode is disabled.
-    if (!options.windowed && !options.span) flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+    if (!options.windowed && !options.span) flags |= SDL_WINDOW_FULLSCREEN;
 
     SDL_Window* window = SDL_CreateWindow("Galactic Orbit Screensaver",
-        x, y, width, height, flags);
+        width, height, flags);
+    if (window && options.span) SDL_SetWindowPosition(window, x, y);
     if (!window) {
         std::cerr << "SDL_CreateWindow failed: " << SDL_GetError() << '\n';
         SDL_Quit();
@@ -323,7 +326,7 @@ int main(int argc, char** argv) {
     SDL_GL_SetSwapInterval(1);
 
     int drawableW = 0, drawableH = 0;
-    SDL_GL_GetDrawableSize(window, &drawableW, &drawableH);
+    SDL_GetWindowSizeInPixels(window, &drawableW, &drawableH);
     const auto stars = makeStars(2600,
         static_cast<float>(drawableW) / std::max(1, drawableH) * 1.15f,
         1.15f, 20261109u);
@@ -340,21 +343,19 @@ int main(int argc, char** argv) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) running = false;
             if (event.type == SDL_KEYDOWN) {
-                switch (event.key.keysym.sym) {
+                switch (event.key.key) {
                     case SDLK_ESCAPE:
-                    case SDLK_q: running = false; break;
+                    case SDLK_Q: running = false; break;
                     case SDLK_SPACE: paused = !paused; break;
-                    case SDLK_r: accumulated = 0.0; break;
+                    case SDLK_R: accumulated = 0.0; break;
                     case SDLK_PLUS:
                     case SDLK_EQUALS:
                     case SDLK_KP_PLUS: speed = std::min(8.0, speed * 1.2); break;
                     case SDLK_MINUS:
                     case SDLK_KP_MINUS: speed = std::max(0.05, speed / 1.2); break;
-                    case SDLK_f:
-                        if (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP)
-                            SDL_SetWindowFullscreen(window, 0);
-                        else
-                            SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+                    case SDLK_F:
+                        SDL_SetWindowFullscreen(window,
+                            (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN) == 0);
                         break;
                     default: break;
                 }
@@ -366,7 +367,7 @@ int main(int argc, char** argv) {
         previous = now;
         if (!paused) accumulated += std::min(delta, 0.1);
 
-        SDL_GL_GetDrawableSize(window, &drawableW, &drawableH);
+        SDL_GetWindowSizeInPixels(window, &drawableW, &drawableH);
         render(stars, drawableW, drawableH, accumulated, speed);
         SDL_GL_SwapWindow(window);
     }
