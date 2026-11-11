@@ -151,6 +151,21 @@ void main() {
         float orbit=0.024+float(j)*0.010;
         vec2 pp=sunPos+vec2(cos(a),sin(a))*orbit;
         float pr=0.0038+float(j)*0.00048;
+
+        // A short, curved-looking wake, approximated by a tapered segment
+        // behind the planet so it adds little fragment-shader cost.
+        float pastA=a-0.24;
+        vec2 pastPos=sunPos+vec2(cos(pastA),sin(pastA))*orbit;
+        vec2 wake=pp-pastPos;
+        float wakeLength=dot(wake,wake);
+        float along=clamp(dot(uv-pastPos,wake)/max(wakeLength,0.000001),0.0,1.0);
+        float wakeDistance=length(uv-(pastPos+wake*along));
+        float wakeWidth=pr*(0.72-0.32*along);
+        float wakeGlow=exp(-pow(wakeDistance/max(wakeWidth,0.0005),2.0));
+        float wakeFade=smoothstep(0.0,0.12,along)*(1.0-0.72*along);
+        vec3 wakeColor=mix(vec3(0.28,0.48,0.92),vec3(0.95,0.66,0.38),float(j)/7.0);
+        c+=wakeColor*wakeGlow*wakeFade*0.22;
+
         vec2 local=(uv-pp)/pr;
         vec3 world=vec3(0.0);
         if(j==0) world=mappedSphere(mercuryTex,local);
