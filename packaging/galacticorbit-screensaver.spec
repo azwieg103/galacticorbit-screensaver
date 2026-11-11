@@ -1,6 +1,6 @@
 Name:           galacticorbit-screensaver
 Version:        0.1.0
-Release:        4%{?dist}
+Release:        5%{?dist}
 Summary:        Animated Milky Way background for KDE Plasma 6 lock screen
 License:        GPL-3.0-only
 URL:            https://github.com/azwieg103/galacticorbit-screensaver
@@ -62,6 +62,10 @@ SDL3/OpenGL preview executable.
 %attr(755,root,root) %{_libdir}/qt6/qml/org/zwiegnet/galacticorbit/geometry/libgalacticorbitgeometryplugin.so
 
 %changelog
+* Wed Nov 11 2026 Zwiegnet <programming@zwiegnet.com> - 0.1.0-5
+- Separate galaxy and planetary animation clocks for visible orbital motion.
+- Increase spiral-arm pitch and width and make major arms less symmetric.
+- Match Orion Spur pitch to the revised major-arm geometry.
 * Wed Nov 11 2026 Zwiegnet <programming@zwiegnet.com> - 0.1.0-4
 - Bundle planet textures in the source tree and install them through CMake.
 - Remove build-time network downloads and the curl build dependency.
