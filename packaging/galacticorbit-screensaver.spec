@@ -1,6 +1,6 @@
 Name:           galacticorbit-screensaver
 Version:        0.1.0
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Animated Milky Way background for KDE Plasma 6 lock screen
 License:        GPL-3.0-only
 URL:            https://github.com/azwieg103/galacticorbit-screensaver
@@ -17,7 +17,6 @@ BuildRequires:  kf6-kcoreaddons-devel
 BuildRequires:  qt6-qtbase-devel
 BuildRequires:  qt6-qtdeclarative-devel
 BuildRequires:  qt6-qtshadertools-devel
-BuildRequires:  curl
 
 %description
 An animated Milky Way and Solar System visualization for KDE Plasma 6.
@@ -31,7 +30,6 @@ SDL3/OpenGL preview executable.
 %autosetup
 
 %build
-bash scripts/download-planet-textures.sh
 %cmake -DCMAKE_BUILD_TYPE=Release -DGALACTICORBIT_BUILD_PLASMA6=ON
 %cmake_build
 
@@ -64,6 +62,9 @@ bash scripts/download-planet-textures.sh
 %attr(755,root,root) %{_libdir}/qt6/qml/org/zwiegnet/galacticorbit/geometry/libgalacticorbitgeometryplugin.so
 
 %changelog
+* Wed Nov 11 2026 Zwiegnet <programming@zwiegnet.com> - 0.1.0-4
+- Bundle planet textures in the source tree and install them through CMake.
+- Remove build-time network downloads and the curl build dependency.
 * Mon Nov 09 2026 Zwiegnet <programming@zwiegnet.com> - 0.1.0-3
 - Set explicit root-owned Unix permissions for texture, Plasma wallpaper, and Qt QML directories.
 - Ensure lock-screen greeter can traverse directories and read installed textures and QML files.
