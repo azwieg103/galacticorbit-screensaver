@@ -124,13 +124,13 @@ void main() {
 
     // Sagittarius A*: enlarged so it remains legible across the four display bezels.
     float diskR=length(vec2(p.x,p.y*3.5));
-    // Double the apparent scale of the event horizon and surrounding rings.
-    float accretion=exp(-pow((diskR-0.120)/0.0210,2.0));
+    // Three times the original apparent scale of the event horizon and rings.
+    float accretion=exp(-pow((diskR-0.180)/0.0315,2.0));
     c+=vec3(1.0,0.39,0.12)*accretion*1.75;
-    c+=vec3(0.48,0.66,1.0)*exp(-pow((diskR-0.170)/0.0230,2.0))*0.55;
-    float horizon=1.0-smoothstep(0.042,0.055,length(p));
+    c+=vec3(0.48,0.66,1.0)*exp(-pow((diskR-0.255)/0.0345,2.0))*0.55;
+    float horizon=1.0-smoothstep(0.063,0.0825,length(p));
     c=mix(c,vec3(0.00005,0.00004,0.0001),horizon);
-    float photon=exp(-pow((length(p)-0.060)/0.0076,2.0));
+    float photon=exp(-pow((length(p)-0.090)/0.0114,2.0));
     c+=vec3(1.0,0.82,0.56)*photon*1.15;
 
     // Sun shares the Orion Spur's pattern rotation, with slight orbital drift.
@@ -160,6 +160,22 @@ void main() {
         float line=1.0-smoothstep(lineWidth-fwidth(wakeDistance),lineWidth+fwidth(wakeDistance),wakeDistance);
         vec3 wakeColor=mix(vec3(0.38,0.58,0.98),vec3(1.0,0.76,0.48),float(j)/7.0);
         c+=wakeColor*line*0.72;
+
+        // Thin planetary rings, viewed at 60 degrees from face-on (ellipse ratio 0.5).
+        // Their major axes share a consistent projected tilt across the system.
+        vec2 ringDelta=uv-pp;
+        float ringAngle=0.42;
+        mat2 ringRot=mat2(cos(ringAngle),-sin(ringAngle),sin(ringAngle),cos(ringAngle));
+        vec2 ringPos=ringRot*ringDelta;
+        float ringRadius=length(vec2(ringPos.x,ringPos.y/0.5));
+        float ringInner=pr*1.42;
+        float ringOuter=pr*2.15;
+        float ringBand=1.0-smoothstep(pr*0.075,pr*0.15,abs(ringRadius-(ringInner+ringOuter)*0.5));
+        ringBand*=smoothstep(ringInner-pr*0.12,ringInner+pr*0.12,ringRadius);
+        ringBand*=1.0-smoothstep(ringOuter-pr*0.12,ringOuter+pr*0.12,ringRadius);
+        float ringShade=0.55+0.45*sin((ringRadius-ringInner)*5200.0+float(j)*1.7);
+        vec3 ringColor=mix(vec3(0.32,0.48,0.72),vec3(0.88,0.72,0.52),float(j)/7.0);
+        c+=ringColor*ringBand*ringShade*0.78;
 
         vec2 local=(uv-pp)/pr;
         vec3 world=vec3(0.0);
