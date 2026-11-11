@@ -61,7 +61,7 @@ vec2 screenFromGalactic(vec2 p) {
 float armField(vec2 p,float base,float t,float pitch) {
     float r=max(length(p),0.012);
     float a=atan(p.y,p.x);
-    float phaseA=a-base-log(r/0.075)/pitch+t;
+    float phaseA=a-base-log(r/0.075)/pitch-t;
     float wrapped=atan(sin(phaseA),cos(phaseA));
     float ridge=wrapped*r;
     float width=mix(0.014,0.045,smoothstep(0.06,0.66,r));
@@ -106,7 +106,7 @@ void main() {
 
     // Orion Spur: a distinct shorter branch between two major arms.
     float spurAngle=atan(p.y,p.x);
-    float spurPhase=spurAngle-(2.35+log(max(r,0.012)/0.34)/0.40-t);
+    float spurPhase=spurAngle-(2.35+log(max(r,0.012)/0.34)/0.40+t);
     float spurDistance=atan(sin(spurPhase),cos(spurPhase))*r;
     float spur=exp(-pow(spurDistance/0.014,2.0))
         *smoothstep(0.20,0.28,r)*(1.0-smoothstep(0.43,0.50,r));
@@ -141,7 +141,7 @@ void main() {
 
     // Keep the Sun exactly on the Orion Spur centerline at its reference radius.
     // Both use the same galactic pattern angle, so the Sun cannot drift off the arm.
-    float sunAngle=2.35-t;
+    float sunAngle=2.35+t;
     vec2 sunGal=0.34*vec2(cos(sunAngle),sin(sunAngle));
     vec2 sunPos=screenFromGalactic(sunGal);
     float sunDist=length(uv-sunPos);

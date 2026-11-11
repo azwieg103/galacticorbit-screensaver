@@ -39,14 +39,14 @@ WallpaperItem {
     function armLabelPosition(index, radius) {
         const base = index * Math.PI * 0.5 + 0.52 + 0.11 * Math.sin(index * 2.17)
         const angle = base + Math.log(radius / 0.075) / 0.40
-                      - galaxyPhase * 0.105 * rotationSpeed
+                      + galaxyPhase * 0.105 * rotationSpeed
         return galacticPoint(radius * Math.cos(angle), radius * Math.sin(angle))
     }
 
     function orionLabelPosition() {
         const radius = 0.405
         const angle = 2.35 + Math.log(radius / 0.34) / 0.40
-                      - galaxyPhase * 0.105 * rotationSpeed
+                      + galaxyPhase * 0.105 * rotationSpeed
         return galacticPoint(radius * Math.cos(angle), radius * Math.sin(angle))
     }
 
