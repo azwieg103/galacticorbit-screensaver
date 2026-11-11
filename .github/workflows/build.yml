@@ -59,40 +59,42 @@ jobs:
     name: Windows x64 ZIP and MSI
     runs-on: windows-2022
     env:
-      VCPKG_ROOT: C:\\vcpkg
+      VCPKG_ROOT: C:/vcpkg
       PRODUCT_VERSION: 0.1.0
     steps:
       - uses: actions/checkout@v4
       - name: Install SDL3
         shell: pwsh
         run: |
-          & "$env:VCPKG_ROOT\\vcpkg.exe" install sdl3:x64-windows
+          & "$env:VCPKG_ROOT/vcpkg.exe" install sdl3:x64-windows
       - name: Configure and build
         shell: pwsh
         run: |
-          cmake -S . -B build -A x64 -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT\\scripts\\buildsystems\\vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_BUILD_TYPE=Release
+          cmake -S . -B build -A x64 -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_BUILD_TYPE=Release
           cmake --build build --config Release --parallel
       - name: Assemble portable package
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force dist\\windows\\assets\\planet-textures | Out-Null
-          Copy-Item build\\Release\\galacticorbit-screensaver.exe dist\\windows\\
-          Copy-Item "$env:VCPKG_ROOT\\installed\\x64-windows\\bin\\SDL3.dll" dist\\windows\\
-          Copy-Item assets\\planet-textures\\* dist\\windows\\assets\\planet-textures\\
-          Compress-Archive -Path dist\\windows\\* -DestinationPath galacticorbit-windows-x64.zip -Force
+          New-Item -ItemType Directory -Force dist/windows/assets/planet-textures | Out-Null
+          Copy-Item build/Release/galacticorbit-screensaver.exe dist/windows/
+          Copy-Item "$env:VCPKG_ROOT/installed/x64-windows/bin/SDL3.dll" dist/windows/
+          Copy-Item assets/planet-textures/* dist/windows/assets/planet-textures/
+          Compress-Archive -Path dist/windows/* -DestinationPath galacticorbit-windows-x64.zip -Force
       - name: Install WiX Toolset
         shell: pwsh
         run: choco install wixtoolset --version=3.14.1 --yes --no-progress
       - name: Build MSI installer
         shell: pwsh
         run: |
-          $wix = "$env:ProgramFiles(x86)\\WiX Toolset v3.14\\bin"
-          & "$wix\\heat.exe" dir "$env:GITHUB_WORKSPACE\\dist\\windows" -cg AppFiles -dr INSTALLFOLDER -gg -srd -var var.SourceDir -out "$env:RUNNER_TEMP\\Files.wxs"
+          $wix = "$env:ProgramFiles(x86)/WiX Toolset v3.14/bin"
+          & "$wix/heat.exe" dir "$env:GITHUB_WORKSPACE/dist/windows" -cg AppFiles -dr INSTALLFOLDER -gg -srd -var var.SourceDir -out "$env:RUNNER_TEMP/Files.wxs"
           if ($LASTEXITCODE -ne 0) { throw "WiX heat failed" }
-          & "$wix\\candle.exe" -nologo "-dProductVersion=$env:PRODUCT_VERSION" "-dSourceDir=$env:GITHUB_WORKSPACE\\dist\\windows" -out "$env:RUNNER_TEMP\\" packaging\\windows\\Product.wxs "$env:RUNNER_TEMP\\Files.wxs"
-          if ($LASTEXITCODE -ne 0) { throw "WiX candle failed" }
-          & "$wix\\light.exe" -nologo -out galacticorbit-windows-x64.msi "$env:RUNNER_TEMP\\Product.wixobj" "$env:RUNNER_TEMP\\Files.wixobj"
-          if ($LASTEXITCODE -ne 0) { throw "WiX light failed" }
+          & "$wix/candle.exe" -nologo -arch x64 "-dProductVersion=$env:PRODUCT_VERSION" -out "$env:RUNNER_TEMP/Product.wixobj" packaging/windows/Product.wxs
+          if ($LASTEXITCODE -ne 0) { throw "WiX Product compile failed" }
+          & "$wix/candle.exe" -nologo -arch x64 "-dSourceDir=$env:GITHUB_WORKSPACE/dist/windows" -out "$env:RUNNER_TEMP/Files.wixobj" "$env:RUNNER_TEMP/Files.wxs"
+          if ($LASTEXITCODE -ne 0) { throw "WiX file compile failed" }
+          & "$wix/light.exe" -nologo -out galacticorbit-windows-x64.msi "$env:RUNNER_TEMP/Product.wixobj" "$env:RUNNER_TEMP/Files.wixobj"
+          if ($LASTEXITCODE -ne 0) { throw "WiX link failed" }
       - name: Upload Windows packages
         uses: actions/upload-artifact@v4
         with:
