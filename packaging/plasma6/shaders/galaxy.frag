@@ -64,7 +64,6 @@ float armField(vec2 p,float base,float t,float pitch) {
     float phaseA=a-base-log(r/0.075)/pitch+t;
     float wrapped=atan(sin(phaseA),cos(phaseA));
     float ridge=wrapped*r;
-    ridge+=0.006*(fbm(p*24.0+vec2(base*9.0,t*0.012))-0.5);
     float width=mix(0.014,0.045,smoothstep(0.06,0.66,r));
     float turbulent=fbm(p*31.0+vec2(base*4.0,t*0.035));
     float filament=exp(-pow((ridge+0.004*(turbulent-0.5))/width,2.0));
@@ -106,7 +105,7 @@ void main() {
 
     // Orion Spur: a distinct shorter branch between two major arms.
     float spurAngle=atan(p.y,p.x);
-    float spurPhase=spurAngle-(2.35+log(max(r,0.012)/0.34)/0.285-t);
+    float spurPhase=spurAngle-(2.35+log(max(r,0.012)/0.34)/0.40-t);
     float spurDistance=atan(sin(spurPhase),cos(spurPhase))*r;
     float spur=exp(-pow(spurDistance/0.014,2.0))
         *smoothstep(0.20,0.28,r)*(1.0-smoothstep(0.43,0.50,r));
