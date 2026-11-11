@@ -62,6 +62,9 @@ SDL3/OpenGL preview executable.
 %attr(755,root,root) %{_libdir}/qt6/qml/org/zwiegnet/galacticorbit/geometry/libgalacticorbitgeometryplugin.so
 
 %changelog
+* Wed Nov 11 2026 Zwiegnet <programming@zwiegnet.com> - 0.1.0-17
+- Reduce shader-layer resolution to 45 percent per dimension to lower sustained GPU load.
+- Use single-octave secondary cloud fields and skip planetary loops outside the Solar System region.
 * Wed Nov 11 2026 Zwiegnet <programming@zwiegnet.com> - 0.1.0-16
 - Reverse the shader time phase so the spiral arms visibly travel clockwise on the screen.
 - Keep the Orion Spur, Sun, and arm labels synchronized with the corrected motion.
