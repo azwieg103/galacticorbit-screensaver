@@ -166,7 +166,7 @@ void main() {
     // fwidth() are undefined inside a non-uniform branch on some GPUs; placing
     // them there caused the optimization-era orbit path to break into a large,
     // rotating dashed ring.
-    for(int j=0;j<7;j++) {
+    for(int j=0;j<8;j++) {
         float orbit=0.024+float(j)*0.010;
         float orbitDistance=abs(projectedOrbitRadius-orbit);
         float orbitWidth=0.00024;
