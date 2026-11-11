@@ -38,6 +38,37 @@ The shader layer is rendered at half physical resolution and smoothly upscaled t
 
 The visualization is illustrative rather than a scale model. Galactic dimensions, distances, orbital periods, and animation rates are compressed or accelerated for viewing. The Milky Way's detailed spiral structure and pattern speed are not known with certainty.
 
+## Automated builds and releases
+
+GitHub Actions builds packages when code is pushed and publishes release files when a version tag is pushed.
+
+### Build a release
+
+1. Merge or push the release-ready code to `main`.
+2. Create and push a version tag, for example:
+
+   ```bash
+   git tag v0.1.0
+   git push origin v0.1.0
+   ```
+
+3. Open the repository's **Actions** tab and watch the **Build and Release** workflow.
+4. When all required jobs pass, GitHub creates a Release for the tag and attaches the generated packages.
+
+The workflow currently produces:
+
+| Platform | Release asset | Notes |
+|---|---|---|
+| Enterprise Linux 10 x86_64 | RPM and source RPM | Built in an AlmaLinux 10 container; intended for AlmaLinux, Rocky Linux, Oracle Linux, and CentOS Stream 10. Runtime dependency availability should still be checked on each distribution. |
+| Windows 10/11 x64 | ZIP | Standalone executable, SDL3 runtime DLL, and planet textures. |
+| Windows 10/11 x64 | MSI | Per-machine installer built with WiX Toolset. |
+
+The RPM package version and Windows package version are currently taken from the packaging metadata/workflow. Update those when preparing a new product version; a release tag alone does not change the embedded package version.
+
+### Solaris status
+
+Solaris is not yet a release target. GitHub-hosted Actions runners do not provide a native Solaris environment, and the project currently depends on SDL3/OpenGL. A genuine Solaris build needs a supported Solaris build host/toolchain and SDL3 development libraries. We will add a Solaris archive or native package after that environment is available and the build is verified; the Linux RPM is not a Solaris substitute.
+
 ## Install on AlmaLinux 10
 
 The recommended installation is the RPM, which packages the standalone preview, bundled planetary textures, and KDE Plasma 6 wallpaper integration.

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" Name="Galactic Orbit" Language="1033"
+           Version="$(var.ProductVersion)" Manufacturer="Zwiegnet"
+           UpgradeCode="A9B38A5B-3D32-4C91-A50E-9C1B6E67F81C">
+    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine"
+             Description="Galactic Orbit Milky Way visualization" />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Galactic Orbit is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+    <Feature Id="ProductFeature" Title="Galactic Orbit" Level="1">
+      <ComponentGroupRef Id="AppFiles" />
+    </Feature>
+  </Product>
+  <Fragment>
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLFOLDER" Name="Galactic Orbit" />
+      </Directory>
+    </Directory>
+  </Fragment>
+</Wix>
