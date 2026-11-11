@@ -5,6 +5,7 @@ layout(std140, binding = 0) uniform buf {
     mat4 qt_Matrix;
     float qt_Opacity;
     float phase;
+    float planetPhase;
     vec2 desktopSize;
     vec2 screenOrigin;
     vec2 screenSize;
@@ -63,7 +64,8 @@ float armField(vec2 p,float base,float t,float pitch) {
     float phaseA=a-base-log(r/0.075)/pitch+t;
     float wrapped=atan(sin(phaseA),cos(phaseA));
     float ridge=wrapped*r;
-    float width=mix(0.010,0.033,smoothstep(0.06,0.66,r));
+    ridge+=0.006*(fbm(p*24.0+vec2(base*9.0,t*0.012))-0.5);
+    float width=mix(0.014,0.045,smoothstep(0.06,0.66,r));
     float turbulent=fbm(p*31.0+vec2(base*4.0,t*0.035));
     float filament=exp(-pow((ridge+0.004*(turbulent-0.5))/width,2.0));
     float clump=0.60+0.40*fbm(p*48.0+vec2(base*7.0,base*3.1));
@@ -89,13 +91,13 @@ void main() {
     // Four broad, uneven major arms with blue star clouds and warm H-II knots.
     float armTotal=0.0;
     for(int i=0;i<4;i++) {
-        float base=float(i)*(PI*0.5)+0.52;
-        float f=armField(p,base,t,0.285);
+        float base=float(i)*(PI*0.5)+0.52+0.11*sin(float(i)*2.17);
+        float f=armField(p,base,t,0.40);
         armTotal=max(armTotal,f);
         float cloud=fbm(p*42.0+vec2(float(i)*19.0,t*0.018));
         c+=vec3(0.17,0.29,0.58)*f*(0.42+cloud*0.52);
         c+=vec3(0.12,0.20,0.42)*f*f*0.55;
-        float dust=armField(p,base+0.032,t,0.285);
+        float dust=armField(p,base+0.040,t,0.40);
         float dustNoise=0.55+0.45*fbm(p*65.0+vec2(float(i)*11.0,float(i)*5.3));
         c*=1.0-dust*dustNoise*0.34;
         float knots=pow(max(0.0,fbm(p*78.0+vec2(float(i)*31.0,float(i)*13.7)+vec2(t*0.01))-0.48),2.0);
@@ -141,7 +143,7 @@ void main() {
 
     // Textured planets with visible tapered trails behind their direction of travel.
     for(int j=0;j<8;j++) {
-        float a=phase*(0.34+float(j)*0.055)+float(j)*1.7;
+        float a=planetPhase*(0.34+float(j)*0.055)+float(j)*1.7;
         float orbit=0.024+float(j)*0.010;
         vec2 pp=sunPos+vec2(cos(a),sin(a))*orbit;
         float pr=0.0038+float(j)*0.00048;
