@@ -131,6 +131,27 @@ WallpaperItem {
     ArmLabel { armIndex: 3; label: "PERSEUS ARM" }
 
     Text {
+        id: sagittariusALabel
+        readonly property point centerPoint: root.galacticPoint(0.0, 0.0)
+        x: centerPoint.x - width * 0.5
+        y: centerPoint.y - Math.max(42, root.height * 0.055) - height * 0.5
+        text: "SAGITTARIUS A*"
+        visible: root.showLabels
+                 && centerPoint.x >= 0 && centerPoint.x <= root.width
+                 && centerPoint.y >= 0 && centerPoint.y <= root.height
+        color: "#c4e8f7ff"
+        style: Text.Outline
+        styleColor: "#aa172b55"
+        font.family: "Sans Serif"
+        font.pixelSize: Math.max(16, Math.min(24, root.height * 0.019))
+        font.weight: Font.Bold
+        font.letterSpacing: 3.0
+        font.italic: true
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
+    }
+
+    Text {
         id: orionLabel
         readonly property point anchorPoint: root.orionLabelPosition()
         x: anchorPoint.x - width * 0.5
