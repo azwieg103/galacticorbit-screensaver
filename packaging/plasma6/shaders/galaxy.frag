@@ -156,7 +156,7 @@ void main() {
     float planeCos=cos(orbitalPlaneAngle);
     float planeSin=sin(orbitalPlaneAngle);
 
-    // Draw the eight complete, subtle orbital paths in the same tilted plane.
+    // Draw seven subtle orbital paths; omit the wide outer boundary ring.
     vec2 fromSun=uv-sunPos;
     vec2 planeLocal=vec2(planeCos*fromSun.x+planeSin*fromSun.y,
                          -planeSin*fromSun.x+planeCos*fromSun.y);
@@ -165,7 +165,7 @@ void main() {
     // The planetary system occupies a small region around the Sun. Avoid
     // running eight orbit and texture-placement loops for distant galaxy pixels.
     if(dot(fromSun,fromSun)<0.0121) {
-        for(int j=0;j<8;j++) {
+        for(int j=0;j<7;j++) {
             float orbit=0.024+float(j)*0.010;
             float orbitDistance=abs(projectedOrbitRadius-orbit);
             float orbitWidth=0.00024;
