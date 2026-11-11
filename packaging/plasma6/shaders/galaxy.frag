@@ -30,8 +30,9 @@ float noise2(vec2 p) {
                mix(hash21(i+vec2(0,1)),hash21(i+vec2(1,1)),f.x),f.y);
 }
 float fbm(vec2 p) {
+    // Three octaves retain broad nebula structure while reducing per-pixel work.
     float v=0.0, a=0.5;
-    for(int i=0;i<4;i++){ v+=noise2(p)*a; p=p*2.03+vec2(17.1,9.2); a*=0.5; }
+    for(int i=0;i<3;i++){ v+=noise2(p)*a; p=p*2.03+vec2(17.1,9.2); a*=0.5; }
     return v;
 }
 vec3 mappedSphere(sampler2D tex, vec2 p) {
@@ -94,11 +95,9 @@ void main() {
         float cloud=fbm(p*42.0+vec2(float(i)*19.0,t*0.018));
         c+=vec3(0.17,0.29,0.58)*f*(0.42+cloud*0.52);
         c+=vec3(0.12,0.20,0.42)*f*f*0.55;
-        // Dark dust lane offset along the inner edge of each luminous arm.
         float dust=armField(p,base+0.032,t,0.285);
         float dustNoise=0.55+0.45*fbm(p*65.0+vec2(float(i)*11.0,float(i)*5.3));
         c*=1.0-dust*dustNoise*0.34;
-        // Scattered hot young-star regions, strongest in the outer disk.
         float knots=pow(max(0.0,fbm(p*78.0+vec2(float(i)*31.0,float(i)*13.7)+vec2(t*0.01))-0.48),2.0);
         c+=vec3(0.95,0.48,0.25)*knots*f*1.9;
     }
@@ -113,20 +112,15 @@ void main() {
     c+=vec3(0.22,0.39,0.72)*spur*(0.48+spurCloud*0.62);
     c+=vec3(0.92,0.48,0.27)*spur*pow(max(0.0,spurCloud-0.58),2.0)*3.0;
 
-    // Dense, irregular star fields throughout the disk, not only on arm centerlines.
     float field=hash21(floor(pixel*0.72));
     float starMask=step(0.9972,field);
     float starBright=0.35+0.65*hash21(floor(pixel*0.19));
     c+=vec3(0.54,0.66,0.96)*starMask*starBright*(0.35+disk*1.5);
     float fine=hash21(floor(pixel*1.7));
     c+=vec3(0.30,0.39,0.63)*step(0.9992,fine)*disk*0.65;
-
-    // Fade the outer edge softly into deep space.
     c=mix(vec3(0.0012,0.0017,0.0055),c,edge);
 
-    // Sagittarius A*: compact dark horizon and small, brilliant tilted accretion ring.
-    // Enlarged Sagittarius A* so its silhouette remains legible across the
-    // physical bezels between the four displays.
+    // Sagittarius A*: enlarged so it remains legible across the four display bezels.
     float diskR=length(vec2(p.x,p.y*3.5));
     float accretion=exp(-pow((diskR-0.060)/0.0105,2.0));
     c+=vec3(1.0,0.39,0.12)*accretion*1.75;
@@ -136,7 +130,7 @@ void main() {
     float photon=exp(-pow((length(p)-0.030)/0.0038,2.0));
     c+=vec3(1.0,0.82,0.56)*photon*1.15;
 
-    // Sun shares the Orion Spur's pattern rotation, with only slight orbital drift.
+    // Sun shares the Orion Spur's pattern rotation, with slight orbital drift.
     float sunAngle=2.35-t+phase*0.010*rotationSpeed;
     vec2 sunGal=0.34*vec2(cos(sunAngle),sin(sunAngle));
     vec2 sunPos=screenFromGalactic(sunGal);
@@ -145,26 +139,24 @@ void main() {
     vec3 sunSurface=mappedSphere(sunTex,(uv-sunPos)/0.0095);
     c=mix(c,c+sunSurface*1.5,step(sunDist,0.0095));
 
-    // Textured planets orbit the Sun as a compact, secondary detail.
+    // Textured planets with visible tapered trails behind their direction of travel.
     for(int j=0;j<8;j++) {
         float a=phase*(0.34+float(j)*0.055)+float(j)*1.7;
         float orbit=0.024+float(j)*0.010;
         vec2 pp=sunPos+vec2(cos(a),sin(a))*orbit;
         float pr=0.0038+float(j)*0.00048;
 
-        // A short, curved-looking wake, approximated by a tapered segment
-        // behind the planet so it adds little fragment-shader cost.
-        float pastA=a-0.24;
+        float pastA=a-0.58;
         vec2 pastPos=sunPos+vec2(cos(pastA),sin(pastA))*orbit;
         vec2 wake=pp-pastPos;
         float wakeLength=dot(wake,wake);
         float along=clamp(dot(uv-pastPos,wake)/max(wakeLength,0.000001),0.0,1.0);
         float wakeDistance=length(uv-(pastPos+wake*along));
-        float wakeWidth=pr*(0.72-0.32*along);
+        float wakeWidth=pr*(0.95-0.72*along);
         float wakeGlow=exp(-pow(wakeDistance/max(wakeWidth,0.0005),2.0));
-        float wakeFade=smoothstep(0.0,0.12,along)*(1.0-0.72*along);
+        float wakeFade=smoothstep(0.0,0.08,along)*(1.0-along)*(1.0-along);
         vec3 wakeColor=mix(vec3(0.28,0.48,0.92),vec3(0.95,0.66,0.38),float(j)/7.0);
-        c+=wakeColor*wakeGlow*wakeFade*0.22;
+        c+=wakeColor*wakeGlow*wakeFade*0.48;
 
         vec2 local=(uv-pp)/pr;
         vec3 world=vec3(0.0);
