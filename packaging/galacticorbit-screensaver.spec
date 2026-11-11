@@ -1,6 +1,6 @@
 Name:           galacticorbit-screensaver
 Version:        0.1.0
-Release:        18%{?dist}
+Release:        19%{?dist}
 Summary:        Animated Milky Way background for KDE Plasma 6 lock screen
 License:        GPL-3.0-only
 URL:            https://github.com/azwieg103/galacticorbit-screensaver
@@ -62,6 +62,8 @@ SDL3/OpenGL preview executable.
 %attr(755,root,root) %{_libdir}/qt6/qml/org/zwiegnet/galacticorbit/geometry/libgalacticorbitgeometryplugin.so
 
 %changelog
+* Wed Nov 11 2026 Zwiegnet <programming@zwiegnet.com> - 0.1.0-19
+- Remove the wide outermost Solar System orbit guide while retaining all eight planets and seven inner orbital paths.
 * Wed Nov 11 2026 Zwiegnet <programming@zwiegnet.com> - 0.1.0-18
 - Restore multi-octave cloud, dust, knot, and Orion Spur detail in the spiral arms.
 - Retain the 45 percent shader layer and bounded planetary calculations for performance.
