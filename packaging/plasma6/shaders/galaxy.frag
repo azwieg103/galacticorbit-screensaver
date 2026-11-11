@@ -162,18 +162,23 @@ void main() {
                          -planeSin*fromSun.x+planeCos*fromSun.y);
     float projectedOrbitRadius=length(vec2(planeLocal.x,planeLocal.y/orbitalInclinationScale));
 
-    // The planetary system occupies a small region around the Sun. Avoid
-    // running eight orbit and texture-placement loops for distant galaxy pixels.
-    if(dot(fromSun,fromSun)<0.0121) {
-        for(int j=0;j<7;j++) {
-            float orbit=0.024+float(j)*0.010;
-            float orbitDistance=abs(projectedOrbitRadius-orbit);
-            float orbitWidth=0.00024;
-            float orbitLine=1.0-smoothstep(orbitWidth-fwidth(orbitDistance),
-                                          orbitWidth+fwidth(orbitDistance),orbitDistance);
-            c+=mix(vec3(0.12,0.25,0.48),vec3(0.28,0.40,0.62),float(j)/7.0)*orbitLine*0.58;
-        }
+    // Draw orbit paths outside conditional control flow. Derivatives such as
+    // fwidth() are undefined inside a non-uniform branch on some GPUs; placing
+    // them there caused the optimization-era orbit path to break into a large,
+    // rotating dashed ring.
+    for(int j=0;j<7;j++) {
+        float orbit=0.024+float(j)*0.010;
+        float orbitDistance=abs(projectedOrbitRadius-orbit);
+        float orbitWidth=0.00024;
+        float orbitAA=fwidth(orbitDistance);
+        float orbitLine=1.0-smoothstep(orbitWidth-orbitAA,
+                                      orbitWidth+orbitAA,orbitDistance);
+        c+=mix(vec3(0.12,0.25,0.48),vec3(0.28,0.40,0.62),float(j)/7.0)*orbitLine*0.58;
+    }
 
+    // Limit the eight textured-planet calculations to the local Solar System.
+    // The orbital paths above remain full, continuous ellipses.
+    if(dot(fromSun,fromSun)<0.0121) {
         // Textured planets retain the shared 60-degree plane and clockwise orbit.
         for(int j=0;j<8;j++) {
             float a=planetPhase*(0.34+float(j)*0.055)+float(j)*1.7;
