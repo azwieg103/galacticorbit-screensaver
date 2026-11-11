@@ -1,67 +1,145 @@
-# Galactic Orbit Screensaver
+# Galactic Orbit
 
 <p align="center">
-  <img src="docs/galactic-orbit-overview.svg" alt="Illustrated top-down view of the Milky Way, Sagittarius A*, the Orion Spur, and the Sun" width="100%">
+  <img src="docs/galactic-orbit-overview.svg" alt="Conceptual top-down view of the Milky Way, Sagittarius A*, the Orion Spur, and the Solar System" width="100%">
 </p>
 
-*Conceptual overview of the scene Galactic Orbit aims to render across a multi-monitor desktop. This illustration is schematic, not to scale, and is not a live screenshot of the current renderer.*
+<p align="center"><em>Concept illustration — schematic, not to scale, and not a screenshot of the live renderer.</em></p>
 
+Galactic Orbit is an animated Milky Way and Solar System visualization for Linux, with a KDE Plasma 6 wallpaper integration designed to work as a **KScreenLocker background**. The scene is intended to span a multi-monitor desktop as one continuous galactic canvas.
 
-A scientific-visualization-oriented Milky Way and Solar System display for Linux and KDE Plasma 6. The standalone SDL3/OpenGL preview renders a single scene over a borderless virtual-desktop window where the compositor permits it. The Plasma 6 wallpaper integration renders synchronized per-output slices using shared virtual-desktop coordinates, so the four-monitor wall is treated as one continuous canvas.
+The project includes two renderers:
 
-## Visualization goals
+- **Plasma 6 integration:** a procedural OpenGL shader rendered as synchronized per-display slices, using shared virtual-desktop coordinates. The scene stays aligned across monitor boundaries.
+- **Standalone preview:** an SDL3/OpenGL application with a texture-mapped Sun and planets. It can open a window on one display or a borderless window spanning the virtual desktop.
 
-- Show the complete galactic disk and spiral structure with margins, not a zoomed-in arm fragment.
-- Place Sagittarius A* at the center, with a deliberately magnified but clearly identified event-horizon/accretion-disk visualization.
-- Represent the Orion Spur as a local branch in the disk.
-- Keep spiral-pattern rotation separate from the Sun's galactic orbital motion. The Sun drifts relative to the pattern rather than being rigidly attached to an arm.
-- Render the eight planets with locally downloaded Solar System Scope texture maps in the standalone renderer.
+## Current visualization
 
-Astronomical timescales are accelerated for viewing. The global Milky Way arm geometry remains an observationally informed approximation; the Galaxy's exact spiral structure and pattern speed are not known with certainty. The Plasma wallpaper uses a procedural GPU visualization and is a distinct renderer from the texture-mapped SDL preview.
+The current Plasma scene includes:
 
-## Build on AlmaLinux 10
+- A broad, tilted, face-on Milky Way with a luminous central bulge, textured spiral structure, dust lanes, star fields, and blue-violet outer regions.
+- **Sagittarius A*** at the galactic center, shown as a compact dark event horizon with a detailed, high-contrast accretion disk and photon ring.
+- Five subtle labels identifying the **Norma–Outer Arm**, **Scutum–Centaurus Arm**, **Sagittarius–Carina Arm**, **Perseus Arm**, and **Orion Spur**. The labels follow the slow galactic rotation.
+- The Sun positioned on the Orion Spur, with the planetary system orbiting around it.
+- Eight planets with bundled surface textures and a shared orbital plane inclined 60° to the viewing direction. The circular paths project as ellipses in the top-down view.
+- A two-line title, **“Milky Way Galaxy”** and **“Sagittarius A Black Hole,”** shown once in the upper-left display.
 
-Install the standalone renderer dependencies:
+The shader layer is rendered at half physical resolution and smoothly upscaled to reduce GPU load; the text labels are drawn separately so they remain crisp.
+
+The visualization is illustrative rather than a scale model. Galactic dimensions, distances, orbital periods, and animation rates are compressed or accelerated for viewing. The Milky Way's detailed spiral structure and pattern speed are not known with certainty.
+
+## Install on AlmaLinux 10
+
+The recommended installation is the RPM, which packages the standalone preview, bundled planetary textures, and KDE Plasma 6 wallpaper integration.
+
+### Build dependencies
+
+Enable the CRB repository and install the development packages:
+
+```bash
+sudo dnf install -y epel-release dnf-plugins-core
+sudo dnf config-manager --set-enabled crb
+sudo dnf install -y rpm-build rpmdevtools cmake gcc-c++ make SDL3-devel \
+  mesa-libGL-devel extra-cmake-modules libplasma-devel kf6-kcoreaddons-devel \
+  qt6-qtbase-devel qt6-qtdeclarative-devel qt6-qtshadertools-devel
+```
+
+### Build the RPM
+
+Run these commands from the repository root:
+
+```bash
+mkdir -p ~/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+cp packaging/galacticorbit-screensaver.spec ~/rpmbuild/SPECS/
+git archive --format=tar.gz --prefix=galacticorbit-screensaver-0.1.0/ HEAD \
+  > ~/rpmbuild/SOURCES/galacticorbit-screensaver-0.1.0.tar.gz
+rpmbuild -ba ~/rpmbuild/SPECS/galacticorbit-screensaver.spec
+```
+
+Install the resulting RPM:
+
+```bash
+sudo dnf install ~/rpmbuild/RPMS/x86_64/galacticorbit-screensaver-*.rpm
+```
+
+For the full packaging notes, see [packaging/README.md](packaging/README.md).
+
+## Select it as the KDE lock-screen background
+
+1. Open **System Settings → Screen Locking**.
+2. Open the **Appearance** section and choose **Configure Appearance…** if shown.
+3. Select **Galactic Orbit** as the wallpaper/background.
+4. Apply the setting and press **Meta+L** to test it.
+
+The desktop wallpaper and lock-screen background are configured independently. Select Galactic Orbit in the lock-screen settings, not the ordinary desktop Wallpaper settings.
+
+Galactic Orbit supplies only the background. KDE's normal lock-screen interface and password authentication remain in place; this project does not replace or bypass screen-lock security.
+
+## Build from source
+
+### Standalone SDL3/OpenGL preview
+
+Install the standalone build dependencies:
 
 ```bash
 sudo dnf install -y gcc-c++ cmake make SDL3-devel mesa-libGL-devel
 ```
 
-Download the planetary maps and build:
+Planetary texture maps are bundled in `assets/planet-textures/`; no download step is required for a normal build.
 
 ```bash
-bash scripts/download-planet-textures.sh
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --parallel
-./build/galacticorbit-screensaver --windowed
 ```
 
-The standalone default launches a borderless virtual-desktop window. On Wayland, compositor rules can limit a single SDL window to one output; use the Plasma wallpaper integration for per-output coverage.
-
-## Build the KDE Plasma 6 integration
-
-Install the Plasma 6 development SDK packages (CRB and EPEL may be needed on AlmaLinux 10):
+Run the preview:
 
 ```bash
-sudo dnf install -y epel-release dnf-plugins-core
-sudo dnf config-manager --set-enabled crb
-sudo dnf install -y extra-cmake-modules libplasma-devel kf6-kcoreaddons-devel \
-  qt6-qtbase-devel qt6-qtdeclarative-devel qt6-qtshadertools-devel
-cmake -S . -B build-plasma -DCMAKE_BUILD_TYPE=Release -DGALACTICORBIT_BUILD_PLASMA6=ON
+./build/galacticorbit-screensaver
+```
+
+The default mode opens a borderless window spanning the virtual desktop. Other useful options:
+
+| Command | Purpose |
+|---|---|
+| `./build/galacticorbit-screensaver --windowed` | Open a 1280×720 window on one display |
+| `./build/galacticorbit-screensaver --windowed-span` | Open a borderless window spanning the virtual desktop |
+| `./build/galacticorbit-screensaver --speed 1.5` | Start with a faster animation rate |
+| `./build/galacticorbit-screensaver --help` | Show command-line usage |
+
+On Wayland, compositor behavior can affect how a single SDL window spans multiple outputs. The Plasma integration is the preferred multi-monitor implementation because each output renders its own synchronized slice.
+
+### KDE Plasma 6 integration
+
+Install the Plasma development packages listed in the RPM build dependencies, then configure and build with the Plasma integration enabled:
+
+```bash
+cmake -S . -B build-plasma -DCMAKE_BUILD_TYPE=Release \
+  -DGALACTICORBIT_BUILD_PLASMA6=ON
 cmake --build build-plasma --parallel
 sudo cmake --install build-plasma
 ```
 
-Select **System Settings → Screen Locking → Galactic Orbit**. Keep KDE's normal screen-lock authentication enabled; this package supplies a wallpaper, not a security mechanism.
+For normal use, prefer installing the RPM so the wallpaper package, geometry plugin, shader resources, and texture assets are installed in their expected system locations.
 
-## Build an AlmaLinux 10 RPM
+## Standalone preview controls
 
-See [packaging/README.md](packaging/README.md) for dependencies and commands. The RPM includes the SDL3 preview, planetary texture assets, and Plasma 6 wallpaper integration.
+| Key | Action |
+|---|---|
+| `Esc` or `Q` | Quit |
+| `Space` | Pause or resume |
+| `R` | Reset animation time |
+| `+` / `-` | Increase / decrease animation speed |
+| `F` | Toggle fullscreen |
 
-## Controls
+## Project layout
 
-Standalone preview: Esc/Q exits, Space pauses, R resets animation time, +/- changes speed, and F toggles fullscreen.
+- `src/` — standalone SDL3/OpenGL renderer.
+- `assets/planet-textures/` — bundled Solar System texture maps.
+- `packaging/plasma6/` — KDE Plasma 6 wallpaper package, geometry helper, and procedural fragment shader.
+- `packaging/galacticorbit-screensaver.spec` — AlmaLinux RPM specification.
+- `.github/workflows/` — automated build workflow.
 
 ## License
 
-GNU GPL-3.0. See [LICENSE](LICENSE). Planetary surface maps are distributed under their upstream CC BY 4.0 attribution terms; see the texture download/source notes.
+The application is licensed under **GNU GPL-3.0-only**; see [LICENSE](LICENSE). Planetary texture maps have their own upstream attribution and license terms; consult the included asset/source notes before redistributing those files.
