@@ -122,26 +122,22 @@ void main() {
     c+=vec3(0.30,0.39,0.63)*step(0.9992,fine)*disk*0.65;
     c=mix(vec3(0.0012,0.0017,0.0055),c,edge);
 
-    // Sagittarius A*: a larger, high-contrast focal point with a hot accretion
-    // disk, luminous photon ring, and broad blue-violet gravitational glow.
+    // Sagittarius A*: restore the smaller scale, with tighter ring profiles
+    // and stronger local contrast so its structure reads clearly without a label.
     float centerR=length(p);
     float diskR=length(vec2(p.x,p.y*3.5));
-    float innerGlow=exp(-pow(centerR/0.205,2.0));
-    c+=vec3(0.12,0.20,0.52)*innerGlow*0.42;
-    float outerHalo=exp(-pow((centerR-0.205)/0.095,2.0));
-    c+=vec3(0.20,0.34,0.82)*outerHalo*0.72;
-    float accretion=exp(-pow((diskR-0.235)/0.040,2.0));
-    float accretionHot=exp(-pow((diskR-0.207)/0.014,2.0));
-    c+=vec3(1.0,0.24,0.055)*accretion*2.65;
-    c+=vec3(1.0,0.78,0.42)*accretionHot*1.65;
-    float outerDisk=exp(-pow((diskR-0.335)/0.047,2.0));
-    c+=vec3(0.32,0.48,1.0)*outerDisk*1.05;
-    float horizon=1.0-smoothstep(0.082,0.105,centerR);
+    float accretion=exp(-pow((diskR-0.180)/0.022,2.0));
+    c+=vec3(1.0,0.34,0.10)*accretion*2.05;
+    float accretionCore=exp(-pow((diskR-0.180)/0.009,2.0));
+    c+=vec3(1.0,0.78,0.48)*accretionCore*1.10;
+    float outerDisk=exp(-pow((diskR-0.255)/0.024,2.0));
+    c+=vec3(0.42,0.61,1.0)*outerDisk*0.78;
+    float horizon=1.0-smoothstep(0.063,0.0825,centerR);
     c=mix(c,vec3(0.000015,0.000012,0.000035),horizon);
-    float photon=exp(-pow((centerR-0.118)/0.0135,2.0));
-    c+=vec3(1.0,0.91,0.72)*photon*2.0;
-    float photonBlue=exp(-pow((centerR-0.142)/0.018,2.0));
-    c+=vec3(0.36,0.58,1.0)*photonBlue*0.82;
+    float photon=exp(-pow((centerR-0.090)/0.0075,2.0));
+    c+=vec3(1.0,0.91,0.72)*photon*1.75;
+    float photonBlue=exp(-pow((centerR-0.108)/0.010,2.0));
+    c+=vec3(0.36,0.58,1.0)*photonBlue*0.62;
 
     // Keep the Sun exactly on the Orion Spur centerline at its reference radius.
     // Both use the same galactic pattern angle, so the Sun cannot drift off the arm.
