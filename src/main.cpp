@@ -299,7 +299,7 @@ void drawGalaxy(float time, float aspect) {
         for (int i = 0; i < 8500; ++i) {
             const float u = static_cast<float>(i) / 8499.0f;
             const float radius = 0.075f + u * (maxRadius - 0.075f);
-            const float angle = base + std::log(radius / 0.075f) / pitch + rotation;
+            const float angle = base - std::log(radius / 0.075f) / pitch + rotation;
             const float n1 = std::sin(i * 127.1f + arm * 311.7f) * 43758.5453f;
             const float n2 = std::sin(i * 269.5f + arm * 183.3f) * 24634.6345f;
             const float jitter = (n1 - std::floor(n1) - 0.5f) * (0.010f + radius * 0.018f);
@@ -341,7 +341,7 @@ void drawGalaxy(float time, float aspect) {
     for (int i = 0; i <= 700; ++i) {
         const float u = static_cast<float>(i) / 700.0f;
         const float radius = 0.30f + u * 0.32f;
-        const float angle = 2.35f + std::log(radius / 0.48f) / pitch + rotation;
+        const float angle = 2.35f - std::log(radius / 0.48f) / pitch + rotation;
         spurPoints.emplace_back(std::cos(angle) * radius * xScale,
                                 std::sin(angle) * radius * yScale);
     }
