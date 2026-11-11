@@ -125,31 +125,30 @@ WallpaperItem {
         verticalAlignment: Text.AlignVCenter
     }
 
+    // Show the title once, on the upper-left display of the virtual desktop.
+    Text {
+        id: galaxyTitle
+        x: 34
+        y: 28
+        width: Math.min(420, root.width - 68)
+        text: "Milky Way Galaxy\nSagittarius A Black Hole"
+        visible: root.screenRect.x === root.desktopRect.x
+                 && root.screenRect.y === root.desktopRect.y
+        color: "#c9e4f5"
+        style: Text.Outline
+        styleColor: "#bb071323"
+        font.family: "Sans Serif"
+        font.pixelSize: Math.max(18, Math.min(27, root.height * 0.025))
+        font.weight: Font.DemiBold
+        font.letterSpacing: 1.4
+        lineHeight: 1.28
+        lineHeightMode: Text.ProportionalHeight
+    }
+
     ArmLabel { armIndex: 0; label: "NORMA–OUTER ARM" }
     ArmLabel { armIndex: 1; label: "SCUTUM–CENTAURUS ARM" }
     ArmLabel { armIndex: 2; label: "SAGITTARIUS–CARINA ARM" }
     ArmLabel { armIndex: 3; label: "PERSEUS ARM" }
-
-    Text {
-        id: sagittariusALabel
-        readonly property point centerPoint: root.galacticPoint(0.0, 0.0)
-        x: centerPoint.x - width * 0.5
-        y: centerPoint.y - Math.max(42, root.height * 0.055) - height * 0.5
-        text: "SAGITTARIUS A*"
-        visible: root.showLabels
-                 && centerPoint.x >= 0 && centerPoint.x <= root.width
-                 && centerPoint.y >= 0 && centerPoint.y <= root.height
-        color: "#c4e8f7ff"
-        style: Text.Outline
-        styleColor: "#aa172b55"
-        font.family: "Sans Serif"
-        font.pixelSize: Math.max(16, Math.min(24, root.height * 0.019))
-        font.weight: Font.Bold
-        font.letterSpacing: 3.0
-        font.italic: true
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-    }
 
     Text {
         id: orionLabel
