@@ -75,13 +75,13 @@ WallpaperItem {
     ShaderEffect {
         id: shader
         anchors.fill: parent
-        // Render the expensive procedural scene at half resolution, then let Qt
-        // upscale the layer smoothly to the physical display resolution.
+        // Render the procedural scene slightly below half resolution to reduce sustained
+        // fragment load, then let Qt upscale it smoothly to the display resolution.
         layer.enabled: true
         layer.smooth: true
         layer.textureSize: Qt.size(
-            Math.max(1, Math.ceil(root.width * 0.5)),
-            Math.max(1, Math.ceil(root.height * 0.5))
+            Math.max(1, Math.ceil(root.width * 0.45)),
+            Math.max(1, Math.ceil(root.height * 0.45))
         )
         property real phase: root.galaxyPhase
         property real planetPhase: root.planetPhase
