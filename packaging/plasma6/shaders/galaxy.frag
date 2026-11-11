@@ -82,7 +82,7 @@ void main() {
 
     // Diffuse stellar disk and a warm, luminous central bulge.
     float disk=exp(-pow(p.y/0.20,2.0))*exp(-pow(r/0.68,3.0));
-    float mottling=0.72+0.28*noise2(p*17.0+vec2(t*0.025,0.0));
+    float mottling=0.72+0.28*fbm(p*17.0+vec2(t*0.025,0.0));
     c+=vec3(0.12,0.15,0.27)*disk*mottling*0.62;
     float bulge=exp(-r*r/0.020);
     c+=vec3(0.95,0.48,0.20)*bulge*0.52;
@@ -94,13 +94,13 @@ void main() {
         float base=float(i)*(PI*0.5)+0.52+0.11*sin(float(i)*2.17);
         float f=armField(p,base,t,0.40);
         armTotal=max(armTotal,f);
-        float cloud=noise2(p*42.0+vec2(float(i)*19.0,t*0.018));
+        float cloud=fbm(p*42.0+vec2(float(i)*19.0,t*0.018));
         c+=vec3(0.17,0.29,0.58)*f*(0.42+cloud*0.52);
         c+=vec3(0.12,0.20,0.42)*f*f*0.55;
         float dust=armField(p,base+0.040,t,0.40);
-        float dustNoise=0.55+0.45*noise2(p*65.0+vec2(float(i)*11.0,float(i)*5.3));
+        float dustNoise=0.55+0.45*fbm(p*65.0+vec2(float(i)*11.0,float(i)*5.3));
         c*=1.0-dust*dustNoise*0.34;
-        float knots=pow(max(0.0,noise2(p*78.0+vec2(float(i)*31.0,float(i)*13.7)+vec2(t*0.01))-0.48),2.0);
+        float knots=pow(max(0.0,fbm(p*78.0+vec2(float(i)*31.0,float(i)*13.7)+vec2(t*0.01))-0.48),2.0);
         c+=vec3(0.95,0.48,0.25)*knots*f*1.9;
     }
 
@@ -110,7 +110,7 @@ void main() {
     float spurDistance=atan(sin(spurPhase),cos(spurPhase))*r;
     float spur=exp(-pow(spurDistance/0.014,2.0))
         *smoothstep(0.20,0.28,r)*(1.0-smoothstep(0.43,0.50,r));
-    float spurCloud=noise2(p*53.0+vec2(5.0,t*0.02));
+    float spurCloud=fbm(p*53.0+vec2(5.0,t*0.02));
     c+=vec3(0.22,0.39,0.72)*spur*(0.48+spurCloud*0.62);
     c+=vec3(0.92,0.48,0.27)*spur*pow(max(0.0,spurCloud-0.58),2.0)*3.0;
 
