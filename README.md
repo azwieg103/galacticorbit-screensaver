@@ -1,10 +1,20 @@
 # Galactic Orbit
 
 <p align="center">
-  <img src="docs/galactic-orbit-overview.svg" alt="Conceptual top-down view of the Milky Way, Sagittarius A*, the Orion Spur, and the Solar System" width="100%">
+  <img src="docs/four-monitor-setup.svg" alt="Stylized illustration of Galactic Orbit running across a four-monitor workstation" width="100%">
 </p>
 
-<p align="center"><em>Concept illustration — schematic, not to scale, and not a screenshot of the live renderer.</em></p>
+<p align="center"><em>Four-monitor setup — a stylized illustration based on the real workstation installation.</em></p>
+
+The scene is designed as one continuous view across all four displays, with the galactic center spanning the monitor junctions.
+
+<details>
+<summary>Conceptual view of the Milky Way scene</summary>
+<p align="center">
+  <img src="docs/galactic-orbit-overview.svg" alt="Conceptual top-down view of the Milky Way, Sagittarius A*, the Orion Spur, and the Solar System" width="100%">
+</p>
+<p><em>Schematic overview, not to scale and not a live renderer screenshot.</em></p>
+</details>
 
 Galactic Orbit is an animated Milky Way and Solar System visualization for Linux, with a KDE Plasma 6 wallpaper integration designed to work as a **KScreenLocker background**. The scene is intended to span a multi-monitor desktop as one continuous galactic canvas.
 
