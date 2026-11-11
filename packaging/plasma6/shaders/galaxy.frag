@@ -82,7 +82,7 @@ void main() {
 
     // Diffuse stellar disk and a warm, luminous central bulge.
     float disk=exp(-pow(p.y/0.20,2.0))*exp(-pow(r/0.68,3.0));
-    float mottling=0.72+0.28*fbm(p*17.0+vec2(t*0.025,0.0));
+    float mottling=0.72+0.28*noise2(p*17.0+vec2(t*0.025,0.0));
     c+=vec3(0.12,0.15,0.27)*disk*mottling*0.62;
     float bulge=exp(-r*r/0.020);
     c+=vec3(0.95,0.48,0.20)*bulge*0.52;
@@ -94,13 +94,13 @@ void main() {
         float base=float(i)*(PI*0.5)+0.52+0.11*sin(float(i)*2.17);
         float f=armField(p,base,t,0.40);
         armTotal=max(armTotal,f);
-        float cloud=fbm(p*42.0+vec2(float(i)*19.0,t*0.018));
+        float cloud=noise2(p*42.0+vec2(float(i)*19.0,t*0.018));
         c+=vec3(0.17,0.29,0.58)*f*(0.42+cloud*0.52);
         c+=vec3(0.12,0.20,0.42)*f*f*0.55;
         float dust=armField(p,base+0.040,t,0.40);
-        float dustNoise=0.55+0.45*fbm(p*65.0+vec2(float(i)*11.0,float(i)*5.3));
+        float dustNoise=0.55+0.45*noise2(p*65.0+vec2(float(i)*11.0,float(i)*5.3));
         c*=1.0-dust*dustNoise*0.34;
-        float knots=pow(max(0.0,fbm(p*78.0+vec2(float(i)*31.0,float(i)*13.7)+vec2(t*0.01))-0.48),2.0);
+        float knots=pow(max(0.0,noise2(p*78.0+vec2(float(i)*31.0,float(i)*13.7)+vec2(t*0.01))-0.48),2.0);
         c+=vec3(0.95,0.48,0.25)*knots*f*1.9;
     }
 
@@ -110,7 +110,7 @@ void main() {
     float spurDistance=atan(sin(spurPhase),cos(spurPhase))*r;
     float spur=exp(-pow(spurDistance/0.014,2.0))
         *smoothstep(0.20,0.28,r)*(1.0-smoothstep(0.43,0.50,r));
-    float spurCloud=fbm(p*53.0+vec2(5.0,t*0.02));
+    float spurCloud=noise2(p*53.0+vec2(5.0,t*0.02));
     c+=vec3(0.22,0.39,0.72)*spur*(0.48+spurCloud*0.62);
     c+=vec3(0.92,0.48,0.27)*spur*pow(max(0.0,spurCloud-0.58),2.0)*3.0;
 
@@ -161,36 +161,40 @@ void main() {
     vec2 planeLocal=vec2(planeCos*fromSun.x+planeSin*fromSun.y,
                          -planeSin*fromSun.x+planeCos*fromSun.y);
     float projectedOrbitRadius=length(vec2(planeLocal.x,planeLocal.y/orbitalInclinationScale));
-    for(int j=0;j<8;j++) {
-        float orbit=0.024+float(j)*0.010;
-        float orbitDistance=abs(projectedOrbitRadius-orbit);
-        float orbitWidth=0.00024;
-        float orbitLine=1.0-smoothstep(orbitWidth-fwidth(orbitDistance),
-                                      orbitWidth+fwidth(orbitDistance),orbitDistance);
-        c+=mix(vec3(0.12,0.25,0.48),vec3(0.28,0.40,0.62),float(j)/7.0)*orbitLine*0.58;
-    }
 
-    // Textured planets follow the same inclined orbital plane; increasing angle
-    // preserves the established clockwise motion from the displayed viewpoint.
-    for(int j=0;j<8;j++) {
-        float a=planetPhase*(0.34+float(j)*0.055)+float(j)*1.7;
-        float orbit=0.024+float(j)*0.010;
-        vec2 planePoint=vec2(cos(a)*orbit,sin(a)*orbit*orbitalInclinationScale);
-        vec2 pp=sunPos+vec2(planeCos*planePoint.x-planeSin*planePoint.y,
-                            planeSin*planePoint.x+planeCos*planePoint.y);
-        float pr=0.0038+float(j)*0.00048;
+    // The planetary system occupies a small region around the Sun. Avoid
+    // running eight orbit and texture-placement loops for distant galaxy pixels.
+    if(dot(fromSun,fromSun)<0.0121) {
+        for(int j=0;j<8;j++) {
+            float orbit=0.024+float(j)*0.010;
+            float orbitDistance=abs(projectedOrbitRadius-orbit);
+            float orbitWidth=0.00024;
+            float orbitLine=1.0-smoothstep(orbitWidth-fwidth(orbitDistance),
+                                          orbitWidth+fwidth(orbitDistance),orbitDistance);
+            c+=mix(vec3(0.12,0.25,0.48),vec3(0.28,0.40,0.62),float(j)/7.0)*orbitLine*0.58;
+        }
 
-        vec2 local=(uv-pp)/pr;
-        vec3 world=vec3(0.0);
-        if(j==0) world=mappedSphere(mercuryTex,local);
-        else if(j==1) world=mappedSphere(venusTex,local);
-        else if(j==2) world=mappedSphere(earthTex,local);
-        else if(j==3) world=mappedSphere(marsTex,local);
-        else if(j==4) world=mappedSphere(jupiterTex,local);
-        else if(j==5) world=mappedSphere(saturnTex,local);
-        else if(j==6) world=mappedSphere(uranusTex,local);
-        else world=mappedSphere(neptuneTex,local);
-        c+=world;
+        // Textured planets retain the shared 60-degree plane and clockwise orbit.
+        for(int j=0;j<8;j++) {
+            float a=planetPhase*(0.34+float(j)*0.055)+float(j)*1.7;
+            float orbit=0.024+float(j)*0.010;
+            vec2 planePoint=vec2(cos(a)*orbit,sin(a)*orbit*orbitalInclinationScale);
+            vec2 pp=sunPos+vec2(planeCos*planePoint.x-planeSin*planePoint.y,
+                                planeSin*planePoint.x+planeCos*planePoint.y);
+            float pr=0.0038+float(j)*0.00048;
+
+            vec2 local=(uv-pp)/pr;
+            vec3 world=vec3(0.0);
+            if(j==0) world=mappedSphere(mercuryTex,local);
+            else if(j==1) world=mappedSphere(venusTex,local);
+            else if(j==2) world=mappedSphere(earthTex,local);
+            else if(j==3) world=mappedSphere(marsTex,local);
+            else if(j==4) world=mappedSphere(jupiterTex,local);
+            else if(j==5) world=mappedSphere(saturnTex,local);
+            else if(j==6) world=mappedSphere(uranusTex,local);
+            else world=mappedSphere(neptuneTex,local);
+            c+=world;
+        }
     }
     fragColor=vec4(c,1.0)*qt_Opacity;
 }
