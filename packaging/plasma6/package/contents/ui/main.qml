@@ -126,7 +126,7 @@ WallpaperItem {
     }
 
     ArmLabel { armIndex: 0; label: "NORMA–OUTER ARM" }
-    ArmLabel { armIndex: 1; label: "SCUTUM–CENT AURUS ARM" }
+    ArmLabel { armIndex: 1; label: "SCUTUM–CENTAURUS ARM" }
     ArmLabel { armIndex: 2; label: "SAGITTARIUS–CARINA ARM" }
     ArmLabel { armIndex: 3; label: "PERSEUS ARM" }
 
