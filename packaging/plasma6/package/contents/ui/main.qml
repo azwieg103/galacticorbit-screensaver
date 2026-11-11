@@ -6,9 +6,10 @@ WallpaperItem {
     id: root
     property rect screenRect: Qt.rect(0, 0, width, height)
     property rect desktopRect: Qt.rect(0, 0, width, height)
-    // Deliberately slow all orbital and galactic motion for smooth, ambient lock-screen animation.
-    // 0.025 makes the default animation about 40x slower than the original shader timing.
-    property real rotationSpeed: (configuration.rotationSpeed / 100.0) * 0.025
+    // Slow the shared animation clock so galaxy, Sun, and every planet move together.
+    // 0.025 is about 40x slower than the original shader timing.
+    property real animationScale: 0.025
+    property real rotationSpeed: configuration.rotationSpeed / 100.0
     property bool showLabels: configuration.showLabels
     function refreshGeometry() {
         const s = DisplayGeometry.screenGeometry(root)
@@ -20,7 +21,7 @@ WallpaperItem {
     Timer { interval: 1500; repeat: true; running: true; onTriggered: root.refreshGeometry() }
     FrameAnimation {
         running: true
-        onTriggered: shader.phase = DisplayGeometry.elapsedSeconds()
+        onTriggered: shader.phase = DisplayGeometry.elapsedSeconds() * root.animationScale
     }
     Image { id: sunMap; source: "file:///usr/share/galacticorbit/planet-textures/sun.jpg"; visible: false; cache: true }
     Image { id: mercuryMap; source: "file:///usr/share/galacticorbit/planet-textures/mercury.jpg"; visible: false; cache: true }
@@ -34,11 +35,12 @@ WallpaperItem {
     ShaderEffect {
         id: shader
         anchors.fill: parent
-        property real phase: DisplayGeometry.elapsedSeconds()
+        property real phase: DisplayGeometry.elapsedSeconds() * root.animationScale
         property vector2d desktopSize: Qt.vector2d(Math.max(1, root.desktopRect.width), Math.max(1, root.desktopRect.height))
         property vector2d screenOrigin: Qt.vector2d(root.screenRect.x - root.desktopRect.x, root.screenRect.y - root.desktopRect.y)
         property vector2d screenSize: Qt.vector2d(root.width, root.height)
         property real rotationSpeed: root.rotationSpeed
+        property real showLabels: root.showLabels ? 1.0 : 0.0
         property var sunTex: sunMap
         property var mercuryTex: mercuryMap
         property var venusTex: venusMap
