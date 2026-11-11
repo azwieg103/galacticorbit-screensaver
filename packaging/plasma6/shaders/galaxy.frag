@@ -133,8 +133,9 @@ void main() {
     float photon=exp(-pow((length(p)-0.090)/0.0114,2.0));
     c+=vec3(1.0,0.82,0.56)*photon*1.15;
 
-    // Sun shares the Orion Spur's pattern rotation, with slight orbital drift.
-    float sunAngle=2.35-t+phase*0.010*rotationSpeed;
+    // Keep the Sun exactly on the Orion Spur centerline at its reference radius.
+    // Both use the same galactic pattern angle, so the Sun cannot drift off the arm.
+    float sunAngle=2.35-t;
     vec2 sunGal=0.34*vec2(cos(sunAngle),sin(sunAngle));
     vec2 sunPos=screenFromGalactic(sunGal);
     float sunDist=length(uv-sunPos);
@@ -142,40 +143,36 @@ void main() {
     vec3 sunSurface=mappedSphere(sunTex,(uv-sunPos)/0.0095);
     c=mix(c,c+sunSurface*1.5,step(sunDist,0.0095));
 
-    // Textured planets with visible tapered trails behind their direction of travel.
+    // The solar system shares one orbital plane inclined 60 degrees to our view.
+    // A circular orbit therefore projects to an ellipse with a 0.5 axis ratio.
+    const float orbitalInclinationScale=0.5;
+    const float orbitalPlaneAngle=0.42;
+    float planeCos=cos(orbitalPlaneAngle);
+    float planeSin=sin(orbitalPlaneAngle);
+
+    // Draw the eight complete, subtle orbital paths in the same tilted plane.
+    vec2 fromSun=uv-sunPos;
+    vec2 planeLocal=vec2(planeCos*fromSun.x+planeSin*fromSun.y,
+                         -planeSin*fromSun.x+planeCos*fromSun.y);
+    float projectedOrbitRadius=length(vec2(planeLocal.x,planeLocal.y/orbitalInclinationScale));
+    for(int j=0;j<8;j++) {
+        float orbit=0.024+float(j)*0.010;
+        float orbitDistance=abs(projectedOrbitRadius-orbit);
+        float orbitWidth=0.00024;
+        float orbitLine=1.0-smoothstep(orbitWidth-fwidth(orbitDistance),
+                                      orbitWidth+fwidth(orbitDistance),orbitDistance);
+        c+=mix(vec3(0.12,0.25,0.48),vec3(0.28,0.40,0.62),float(j)/7.0)*orbitLine*0.58;
+    }
+
+    // Textured planets follow the same inclined orbital plane; increasing angle
+    // preserves the established clockwise motion from the displayed viewpoint.
     for(int j=0;j<8;j++) {
         float a=planetPhase*(0.34+float(j)*0.055)+float(j)*1.7;
         float orbit=0.024+float(j)*0.010;
-        vec2 pp=sunPos+vec2(cos(a),sin(a))*orbit;
+        vec2 planePoint=vec2(cos(a)*orbit,sin(a)*orbit*orbitalInclinationScale);
+        vec2 pp=sunPos+vec2(planeCos*planePoint.x-planeSin*planePoint.y,
+                            planeSin*planePoint.x+planeCos*planePoint.y);
         float pr=0.0038+float(j)*0.00048;
-
-        // A clean, straight orbital track behind each planet (not a diffuse comet plume).
-        float pastA=a-0.95;
-        vec2 pastPos=sunPos+vec2(cos(pastA),sin(pastA))*orbit;
-        vec2 wake=pp-pastPos;
-        float wakeLength=dot(wake,wake);
-        float along=clamp(dot(uv-pastPos,wake)/max(wakeLength,0.000001),0.0,1.0);
-        float wakeDistance=length(uv-(pastPos+wake*along));
-        float lineWidth=max(pr*0.22,0.00055);
-        float line=1.0-smoothstep(lineWidth-fwidth(wakeDistance),lineWidth+fwidth(wakeDistance),wakeDistance);
-        vec3 wakeColor=mix(vec3(0.38,0.58,0.98),vec3(1.0,0.76,0.48),float(j)/7.0);
-        c+=wakeColor*line*0.72;
-
-        // Thin planetary rings, viewed at 60 degrees from face-on (ellipse ratio 0.5).
-        // Their major axes share a consistent projected tilt across the system.
-        vec2 ringDelta=uv-pp;
-        float ringAngle=0.42;
-        mat2 ringRot=mat2(cos(ringAngle),-sin(ringAngle),sin(ringAngle),cos(ringAngle));
-        vec2 ringPos=ringRot*ringDelta;
-        float ringRadius=length(vec2(ringPos.x,ringPos.y/0.5));
-        float ringInner=pr*1.42;
-        float ringOuter=pr*2.15;
-        float ringBand=1.0-smoothstep(pr*0.075,pr*0.15,abs(ringRadius-(ringInner+ringOuter)*0.5));
-        ringBand*=smoothstep(ringInner-pr*0.12,ringInner+pr*0.12,ringRadius);
-        ringBand*=1.0-smoothstep(ringOuter-pr*0.12,ringOuter+pr*0.12,ringRadius);
-        float ringShade=0.55+0.45*sin((ringRadius-ringInner)*5200.0+float(j)*1.7);
-        vec3 ringColor=mix(vec3(0.32,0.48,0.72),vec3(0.88,0.72,0.52),float(j)/7.0);
-        c+=ringColor*ringBand*ringShade*0.78;
 
         vec2 local=(uv-pp)/pr;
         vec3 world=vec3(0.0);
