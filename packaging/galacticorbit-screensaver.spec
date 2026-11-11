@@ -1,6 +1,6 @@
 Name:           galacticorbit-screensaver
 Version:        0.1.0
-Release:        7%{?dist}
+Release:        8%{?dist}
 Summary:        Animated Milky Way background for KDE Plasma 6 lock screen
 License:        GPL-3.0-only
 URL:            https://github.com/azwieg103/galacticorbit-screensaver
@@ -62,6 +62,9 @@ SDL3/OpenGL preview executable.
 %attr(755,root,root) %{_libdir}/qt6/qml/org/zwiegnet/galacticorbit/geometry/libgalacticorbitgeometryplugin.so
 
 %changelog
+* Wed Nov 11 2026 Zwiegnet <programming@zwiegnet.com> - 0.1.0-8
+- Increase Sagittarius A event horizon and surrounding rings to three times the original scale.
+- Add thin planetary rings projected at a 60-degree inclination.
 * Wed Nov 11 2026 Zwiegnet <programming@zwiegnet.com> - 0.1.0-7
 - Replace diffuse planetary comet wakes with thin, defined orbital trail lines.
 - Double the apparent diameter of the black hole and its surrounding rings.
