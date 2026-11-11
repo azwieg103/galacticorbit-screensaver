@@ -31,9 +31,9 @@ float noise2(vec2 p) {
                mix(hash21(i+vec2(0,1)),hash21(i+vec2(1,1)),f.x),f.y);
 }
 float fbm(vec2 p) {
-    // Three octaves retain broad nebula structure while reducing per-pixel work.
+    // Two octaves preserve broad cloud structure at substantially lower fragment cost.
     float v=0.0, a=0.5;
-    for(int i=0;i<3;i++){ v+=noise2(p)*a; p=p*2.03+vec2(17.1,9.2); a*=0.5; }
+    for(int i=0;i<2;i++){ v+=noise2(p)*a; p=p*2.03+vec2(17.1,9.2); a*=0.5; }
     return v;
 }
 vec3 mappedSphere(sampler2D tex, vec2 p) {
@@ -67,7 +67,8 @@ float armField(vec2 p,float base,float t,float pitch) {
     float width=mix(0.014,0.045,smoothstep(0.06,0.66,r));
     float turbulent=fbm(p*31.0+vec2(base*4.0,t*0.035));
     float filament=exp(-pow((ridge+0.004*(turbulent-0.5))/width,2.0));
-    float clump=0.60+0.40*fbm(p*48.0+vec2(base*7.0,base*3.1));
+    // Reuse the turbulence sample instead of evaluating another full noise field.
+    float clump=0.60+0.40*turbulent;
     return filament*clump;
 }
 void main() {
