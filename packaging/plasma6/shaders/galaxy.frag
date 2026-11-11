@@ -124,12 +124,13 @@ void main() {
 
     // Sagittarius A*: enlarged so it remains legible across the four display bezels.
     float diskR=length(vec2(p.x,p.y*3.5));
-    float accretion=exp(-pow((diskR-0.060)/0.0105,2.0));
+    // Double the apparent scale of the event horizon and surrounding rings.
+    float accretion=exp(-pow((diskR-0.120)/0.0210,2.0));
     c+=vec3(1.0,0.39,0.12)*accretion*1.75;
-    c+=vec3(0.48,0.66,1.0)*exp(-pow((diskR-0.085)/0.0115,2.0))*0.55;
-    float horizon=1.0-smoothstep(0.021,0.0275,length(p));
+    c+=vec3(0.48,0.66,1.0)*exp(-pow((diskR-0.170)/0.0230,2.0))*0.55;
+    float horizon=1.0-smoothstep(0.042,0.055,length(p));
     c=mix(c,vec3(0.00005,0.00004,0.0001),horizon);
-    float photon=exp(-pow((length(p)-0.030)/0.0038,2.0));
+    float photon=exp(-pow((length(p)-0.060)/0.0076,2.0));
     c+=vec3(1.0,0.82,0.56)*photon*1.15;
 
     // Sun shares the Orion Spur's pattern rotation, with slight orbital drift.
@@ -148,17 +149,17 @@ void main() {
         vec2 pp=sunPos+vec2(cos(a),sin(a))*orbit;
         float pr=0.0038+float(j)*0.00048;
 
-        float pastA=a-0.58;
+        // A clean, straight orbital track behind each planet (not a diffuse comet plume).
+        float pastA=a-0.95;
         vec2 pastPos=sunPos+vec2(cos(pastA),sin(pastA))*orbit;
         vec2 wake=pp-pastPos;
         float wakeLength=dot(wake,wake);
         float along=clamp(dot(uv-pastPos,wake)/max(wakeLength,0.000001),0.0,1.0);
         float wakeDistance=length(uv-(pastPos+wake*along));
-        float wakeWidth=pr*(0.95-0.72*along);
-        float wakeGlow=exp(-pow(wakeDistance/max(wakeWidth,0.0005),2.0));
-        float wakeFade=smoothstep(0.0,0.08,along)*(1.0-along)*(1.0-along);
-        vec3 wakeColor=mix(vec3(0.28,0.48,0.92),vec3(0.95,0.66,0.38),float(j)/7.0);
-        c+=wakeColor*wakeGlow*wakeFade*0.48;
+        float lineWidth=max(pr*0.22,0.00055);
+        float line=1.0-smoothstep(lineWidth-fwidth(wakeDistance),lineWidth+fwidth(wakeDistance),wakeDistance);
+        vec3 wakeColor=mix(vec3(0.38,0.58,0.98),vec3(1.0,0.76,0.48),float(j)/7.0);
+        c+=wakeColor*line*0.72;
 
         vec2 local=(uv-pp)/pr;
         vec3 world=vec3(0.0);
