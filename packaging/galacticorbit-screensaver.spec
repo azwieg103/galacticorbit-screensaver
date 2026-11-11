@@ -1,6 +1,6 @@
 Name:           galacticorbit-screensaver
 Version:        0.1.0
-Release:        9%{?dist}
+Release:        10%{?dist}
 Summary:        Animated Milky Way background for KDE Plasma 6 lock screen
 License:        GPL-3.0-only
 URL:            https://github.com/azwieg103/galacticorbit-screensaver
@@ -62,6 +62,9 @@ SDL3/OpenGL preview executable.
 %attr(755,root,root) %{_libdir}/qt6/qml/org/zwiegnet/galacticorbit/geometry/libgalacticorbitgeometryplugin.so
 
 %changelog
+* Wed Nov 11 2026 Zwiegnet <programming@zwiegnet.com> - 0.1.0-10
+- Add crisp translucent labels for the four major spiral arms and the Orion Spur.
+- Synchronize label anchors with the animated galactic rotation across all displays.
 * Wed Nov 11 2026 Zwiegnet <programming@zwiegnet.com> - 0.1.0-9
 - Replace individual planetary rings and trails with complete shared orbital-plane paths inclined 60 degrees.
 - Keep the Sun locked to the Orion Spur centerline to prevent visible separation.
@@ -91,4 +94,3 @@ SDL3/OpenGL preview executable.
 * Mon Nov 09 2026 Zwiegnet <programming@zwiegnet.com> - 0.1.0-1
 - Add AlmaLinux 10 RPM packaging and KDE Plasma 6 wallpaper integration.
 - Add synchronized per-display rendering over the virtual desktop.
-- Improve galaxy framing, black-hole visibility, and solar-system placement.
