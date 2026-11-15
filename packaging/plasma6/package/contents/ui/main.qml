@@ -52,8 +52,16 @@ WallpaperItem {
 
     Component.onCompleted: refreshGeometry()
     Timer { interval: 1500; repeat: true; running: true; onTriggered: root.refreshGeometry() }
-    FrameAnimation {
+    // FrameAnimation follows the display refresh rate and can drive the
+    // lock-screen shader at 60-100+ updates per second on every output.
+    // A 33 ms timer caps this wallpaper instance at approximately 30 FPS.
+    // All displays sample the same monotonic C++ clock, so their animation
+    // phases remain aligned even if individual timer callbacks are staggered.
+    Timer {
+        interval: 33
+        repeat: true
         running: true
+        triggeredOnStart: true
         onTriggered: {
             const elapsed = DisplayGeometry.elapsedSeconds()
             root.galaxyPhase = elapsed * root.galaxyAnimationScale
