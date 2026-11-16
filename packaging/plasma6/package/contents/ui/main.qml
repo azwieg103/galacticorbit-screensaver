@@ -54,18 +54,19 @@ WallpaperItem {
     Timer { interval: 1500; repeat: true; running: true; onTriggered: root.refreshGeometry() }
     // FrameAnimation follows the display refresh rate and can drive the
     // lock-screen shader at 60-100+ updates per second on every output.
-    // A 33 ms timer caps this wallpaper instance at approximately 30 FPS.
+    // A 67 ms timer limits animation updates to approximately 15 FPS.
+    // This halves shader update requests compared with Release 22, reducing
+    // sustained GPU work on the four independently rendered displays.
     // All displays sample the same monotonic C++ clock, so their animation
     // phases remain aligned even if individual timer callbacks are staggered.
     Timer {
-        interval: 33
+        interval: 67
         repeat: true
         running: true
         triggeredOnStart: true
         onTriggered: {
             const elapsed = DisplayGeometry.elapsedSeconds()
             root.galaxyPhase = elapsed * root.galaxyAnimationScale
-            shader.phase = root.galaxyPhase
             root.planetPhase = elapsed * root.planetAnimationScale
         }
     }
