@@ -41,7 +41,7 @@ jobs:
       - name: Create source archive
         run: |
           mkdir -p "$GITHUB_WORKSPACE/rpmbuild/BUILD" "$GITHUB_WORKSPACE/rpmbuild/BUILDROOT" "$GITHUB_WORKSPACE/rpmbuild/RPMS" "$GITHUB_WORKSPACE/rpmbuild/SOURCES" "$GITHUB_WORKSPACE/rpmbuild/SPECS" "$GITHUB_WORKSPACE/rpmbuild/SRPMS"
-          tar --exclude=.git --transform='s,^,galacticorbit-screensaver-0.1.0/,' \
+          tar --exclude=.git --exclude=./rpmbuild --transform='s,^,galacticorbit-screensaver-0.1.0/,' \
             -czf "$GITHUB_WORKSPACE/rpmbuild/SOURCES/galacticorbit-screensaver-0.1.0.tar.gz" -C "$GITHUB_WORKSPACE" .
           cp packaging/galacticorbit-screensaver.spec "$GITHUB_WORKSPACE/rpmbuild/SPECS/"
       - name: Build RPM and SRPM
@@ -83,7 +83,7 @@ jobs:
       - name: Ensure WiX Toolset is available
         shell: pwsh
         run: |
-          $wix = "$env:ProgramFiles(x86)/WiX Toolset v3.14/bin"
+          $wix = "${env:ProgramFiles(x86)}/WiX Toolset v3.14/bin"
           if (!(Test-Path "$wix/candle.exe") -or !(Test-Path "$wix/light.exe") -or !(Test-Path "$wix/heat.exe")) {
             choco install wixtoolset --version=3.14.1 --yes --no-progress --force
             if ($LASTEXITCODE -ne 0) { throw "WiX Toolset installation failed" }
@@ -91,7 +91,7 @@ jobs:
       - name: Build MSI installer
         shell: pwsh
         run: |
-          $wix = "$env:ProgramFiles(x86)/WiX Toolset v3.14/bin"
+          $wix = "${env:ProgramFiles(x86)}/WiX Toolset v3.14/bin"
           & "$wix/heat.exe" dir "$env:GITHUB_WORKSPACE/dist/windows" -cg AppFiles -dr INSTALLFOLDER -gg -srd -var var.SourceDir -out "$env:RUNNER_TEMP/Files.wxs"
           if ($LASTEXITCODE -ne 0) { throw "WiX heat failed" }
           & "$wix/candle.exe" -nologo -arch x64 "-dProductVersion=$env:PRODUCT_VERSION" -out "$env:RUNNER_TEMP/Product.wixobj" packaging/windows/Product.wxs
