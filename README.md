@@ -34,7 +34,7 @@ The current Plasma scene includes:
 - Eight planets with bundled surface textures and a shared orbital plane inclined 60° to the viewing direction. The circular paths project as ellipses in the top-down view.
 - A two-line title, **“Milky Way Galaxy”** and **“Sagittarius A Black Hole,”** shown once in the upper-left display.
 
-The shader layer is rendered at 45% of each display's physical width and height and smoothly upscaled to reduce GPU load; the text labels are drawn separately so they remain crisp. The Plasma lock-screen animation is capped at approximately 30 FPS, with every display sampling the same monotonic clock to keep the continuous scene synchronized while avoiding refresh-rate-driven rendering.
+The shader layer is rendered at 45% of each display's physical width and height and smoothly upscaled to reduce GPU load; the text labels are drawn separately so they remain crisp. The Plasma lock-screen animation updates at approximately 15 FPS to reduce sustained GPU work. Every display samples the same monotonic clock, keeping the continuous scene synchronized despite independently timed updates.
 
 The visualization is illustrative rather than a scale model. Galactic dimensions, distances, orbital periods, and animation rates are compressed or accelerated for viewing. The Milky Way's detailed spiral structure and pattern speed are not known with certainty.
 
