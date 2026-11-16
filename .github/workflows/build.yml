@@ -40,19 +40,19 @@ jobs:
             qt6-qtshadertools-devel
       - name: Create source archive
         run: |
-          mkdir -p ~/rpmbuild/BUILD ~/rpmbuild/BUILDROOT ~/rpmbuild/RPMS ~/rpmbuild/SOURCES ~/rpmbuild/SPECS ~/rpmbuild/SRPMS
+          mkdir -p "$GITHUB_WORKSPACE/rpmbuild/BUILD" "$GITHUB_WORKSPACE/rpmbuild/BUILDROOT" "$GITHUB_WORKSPACE/rpmbuild/RPMS" "$GITHUB_WORKSPACE/rpmbuild/SOURCES" "$GITHUB_WORKSPACE/rpmbuild/SPECS" "$GITHUB_WORKSPACE/rpmbuild/SRPMS"
           tar --exclude=.git --transform='s,^,galacticorbit-screensaver-0.1.0/,' \
-            -czf ~/rpmbuild/SOURCES/galacticorbit-screensaver-0.1.0.tar.gz -C "$GITHUB_WORKSPACE" .
-          cp packaging/galacticorbit-screensaver.spec ~/rpmbuild/SPECS/
+            -czf "$GITHUB_WORKSPACE/rpmbuild/SOURCES/galacticorbit-screensaver-0.1.0.tar.gz" -C "$GITHUB_WORKSPACE" .
+          cp packaging/galacticorbit-screensaver.spec "$GITHUB_WORKSPACE/rpmbuild/SPECS/"
       - name: Build RPM and SRPM
-        run: rpmbuild -ba ~/rpmbuild/SPECS/galacticorbit-screensaver.spec
+        run: rpmbuild --define "_topdir $GITHUB_WORKSPACE/rpmbuild" -ba "$GITHUB_WORKSPACE/rpmbuild/SPECS/galacticorbit-screensaver.spec"
       - name: Upload EL10 packages
         uses: actions/upload-artifact@v4
         with:
           name: galacticorbit-el10-x86_64
           path: |
-            /root/rpmbuild/RPMS/x86_64/*.rpm
-            /root/rpmbuild/SRPMS/*.src.rpm
+            ${{ github.workspace }}/rpmbuild/RPMS/x86_64/*.rpm
+            ${{ github.workspace }}/rpmbuild/SRPMS/*.src.rpm
           if-no-files-found: error
 
   windows:
@@ -80,9 +80,14 @@ jobs:
           Copy-Item "$env:VCPKG_ROOT/installed/x64-windows/bin/SDL3.dll" dist/windows/
           Copy-Item assets/planet-textures/* dist/windows/assets/planet-textures/
           Compress-Archive -Path dist/windows/* -DestinationPath galacticorbit-windows-x64.zip -Force
-      - name: Install WiX Toolset
+      - name: Ensure WiX Toolset is available
         shell: pwsh
-        run: choco install wixtoolset --version=3.14.1 --yes --no-progress
+        run: |
+          $wix = "$env:ProgramFiles(x86)/WiX Toolset v3.14/bin"
+          if (!(Test-Path "$wix/candle.exe") -or !(Test-Path "$wix/light.exe") -or !(Test-Path "$wix/heat.exe")) {
+            choco install wixtoolset --version=3.14.1 --yes --no-progress --force
+            if ($LASTEXITCODE -ne 0) { throw "WiX Toolset installation failed" }
+          }
       - name: Build MSI installer
         shell: pwsh
         run: |
