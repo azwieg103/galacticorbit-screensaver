@@ -264,7 +264,7 @@ jobs:
 
           Intended for AlmaLinux 10, Red Hat Enterprise Linux 10, Oracle Linux 10, Rocky Linux 10, and CentOS Stream 10. Runtime dependency availability should be checked on each distribution.
 
-          The product version follows the version in CMakeLists.txt. The ZWIEGNET rebuild number increments for every successfully published build of the same product version. Releases contain the binary RPM and source RPM.
+          The product version follows the version in CMakeLists.txt. The ZWIEGNET rebuild number increments for every successfully published build of the same product version. Releases contain the binary RPM, source RPM, portable Windows x64 ZIP, and Windows x64 MSI installer. All packages are built from the same source commit.
 
           Packages are supplied as-is, with no warranty or support. This is a community rebuild for Enterprise Linux; it is not an official upstream release.
           EOF
