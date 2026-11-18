@@ -1,6 +1,6 @@
 Name:           galacticorbit-screensaver
 Version:        0.1.0
-Release:        23%{?dist}
+Release:        %{?rpm_release}%{!?rpm_release:23%{?dist}}
 Summary:        Animated Milky Way background for KDE Plasma 6 lock screen
 License:        GPL-3.0-only
 URL:            https://github.com/azwieg103/galacticorbit-screensaver
