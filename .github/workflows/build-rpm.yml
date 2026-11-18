@@ -96,6 +96,7 @@ jobs:
           mkdir -p rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
           version=$(sed -nE 's/^project\(galacticorbit-screensaver VERSION ([0-9.]+).*/\1/p' CMakeLists.txt)
           test -n "$version"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git archive --format=tar.gz --prefix="galacticorbit-screensaver-$version/" HEAD \
             > "rpmbuild/SOURCES/galacticorbit-screensaver-$version.tar.gz"
           cp packaging/galacticorbit-screensaver.spec rpmbuild/SPECS/
