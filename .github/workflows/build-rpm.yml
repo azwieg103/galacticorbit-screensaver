@@ -21,8 +21,8 @@ jobs:
     container:
       image: almalinux:10
     outputs:
-      is_current: \${{ steps.freshness.outputs.is_current }}
-      rpm_version: \${{ steps.meta.outputs.version }}
+      is_current: ${{ steps.freshness.outputs.is_current }}
+      rpm_version: ${{ steps.meta.outputs.version }}
     steps:
       - name: Install build requirements
         run: |
@@ -38,13 +38,13 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: \${{ github.sha }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Select next ZWIEGNET rebuild number
         id: release
         env:
-          GH_TOKEN: \${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           python3 - <<'PY'
           import json
@@ -54,7 +54,7 @@ jobs:
 
           with open("CMakeLists.txt", encoding="utf-8") as source:
               content = source.read()
-          match = re.search(r"project\\(galacticorbit-screensaver VERSION ([0-9.]+)", content)
+          match = re.search(r"project\(galacticorbit-screensaver VERSION ([0-9.]+)", content)
           if not match:
               raise SystemExit("Could not determine the Galactic Orbit version.")
           upstream_version = match.group(1)
@@ -63,7 +63,7 @@ jobs:
           maximum = 0
           page = 1
           while True:
-              url = f"https://api.github.com/repos/\${{ github.repository }}/releases?per_page=100&page={page}"
+              url = f"https://api.github.com/repos/${{ github.repository }}/releases?per_page=100&page={page}"
               request = urllib.request.Request(url, headers={
                   "Accept": "application/vnd.github+json",
                   "Authorization": f"Bearer {token}",
@@ -77,7 +77,7 @@ jobs:
                   tag = release.get("tag_name", "")
                   if tag.startswith(prefix):
                       suffix = tag[len(prefix):]
-                      number = re.fullmatch(r"([1-9][0-9]*)\\.el10", suffix)
+                      number = re.fullmatch(r"([1-9][0-9]*)\.el10", suffix)
                       if number:
                           maximum = max(maximum, int(number.group(1)))
               if len(releases) < 100:
@@ -86,7 +86,7 @@ jobs:
           rebuild = maximum + 1
           value = f"ZWIEGNET.{rebuild}.el10"
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
-              output.write(f"release={value}\\n")
+              output.write(f"release={value}\n")
           print(f"Product version: {upstream_version}")
           print(f"Selected RPM release: {upstream_version}-{value}")
           PY
@@ -94,7 +94,7 @@ jobs:
       - name: Create source archive
         run: |
           mkdir -p rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
-          version=$(sed -nE 's/^project\\(galacticorbit-screensaver VERSION ([0-9.]+).*/\\1/p' CMakeLists.txt)
+          version=$(sed -nE 's/^project\(galacticorbit-screensaver VERSION ([0-9.]+).*/\1/p' CMakeLists.txt)
           test -n "$version"
           git archive --format=tar.gz --prefix="galacticorbit-screensaver-$version/" HEAD \
             > "rpmbuild/SOURCES/galacticorbit-screensaver-$version.tar.gz"
@@ -106,17 +106,17 @@ jobs:
             --define "rpm_release $RPM_RELEASE" \
             -ba rpmbuild/SPECS/galacticorbit-screensaver.spec
         env:
-          RPM_RELEASE: \${{ steps.release.outputs.release }}
+          RPM_RELEASE: ${{ steps.release.outputs.release }}
 
       - name: Verify package metadata
         run: |
           set -euo pipefail
           mkdir -p dist
-          find rpmbuild/RPMS -type f -name '*.rpm' ! -name '*debuginfo*' ! -name '*debugsource*' -exec cp {} dist/ \\;
-          find rpmbuild/SRPMS -type f -name '*.src.rpm' -exec cp {} dist/ \\;
+          find rpmbuild/RPMS -type f -name '*.rpm' ! -name '*debuginfo*' ! -name '*debugsource*' -exec cp {} dist/ \;
+          find rpmbuild/SRPMS -type f -name '*.src.rpm' -exec cp {} dist/ \;
           test -n "$(find dist -maxdepth 1 -type f -name '*.rpm' -print -quit)"
           for package in dist/*.rpm; do
-            rpm -qp --qf '%{NAME} %{VERSION}-%{RELEASE} %{ARCH}\\n' "$package"
+            rpm -qp --qf '%{NAME} %{VERSION}-%{RELEASE} %{ARCH}\n' "$package"
           done
           binary=$(find dist -maxdepth 1 -type f -name 'galacticorbit-screensaver-*.el10.x86_64.rpm' ! -name '*.src.rpm' | head -n1)
           test -n "$binary"
@@ -167,10 +167,10 @@ jobs:
 
       - name: Publish GitHub release
         env:
-          GH_TOKEN: \${{ github.token }}
-          GH_REPO: \${{ github.repository }}
-          GITHUB_SHA: \${{ github.sha }}
-          RPM_VERSION: \${{ needs.build.outputs.rpm_version }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          GITHUB_SHA: ${{ github.sha }}
+          RPM_VERSION: ${{ needs.build.outputs.rpm_version }}
         run: |
           set -euo pipefail
           tag="galacticorbit-screensaver-$RPM_VERSION"
