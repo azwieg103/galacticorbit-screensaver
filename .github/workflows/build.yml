@@ -24,37 +24,6 @@ jobs:
       - name: Build
         run: cmake --build build --parallel 2
 
-  rpm-el10:
-    name: Enterprise Linux 10 RPM
-    runs-on: ubuntu-latest
-    container: almalinux:10
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - name: Install RPM and Plasma build dependencies
-        run: |
-          dnf install -y epel-release dnf-plugins-core
-          dnf config-manager --set-enabled crb
-          dnf install -y gcc-c++ cmake make git tar rpm-build rpmdevtools \
-            SDL3-devel mesa-libGL-devel extra-cmake-modules libplasma-devel \
-            kf6-kcoreaddons-devel qt6-qtbase-devel qt6-qtdeclarative-devel \
-            qt6-qtshadertools-devel
-      - name: Create source archive
-        run: |
-          mkdir -p "$GITHUB_WORKSPACE/rpmbuild/BUILD" "$GITHUB_WORKSPACE/rpmbuild/BUILDROOT" "$GITHUB_WORKSPACE/rpmbuild/RPMS" "$GITHUB_WORKSPACE/rpmbuild/SOURCES" "$GITHUB_WORKSPACE/rpmbuild/SPECS" "$GITHUB_WORKSPACE/rpmbuild/SRPMS"
-          tar --exclude=.git --exclude=./rpmbuild --transform='s,^,galacticorbit-screensaver-0.1.0/,' \
-            -czf "$GITHUB_WORKSPACE/rpmbuild/SOURCES/galacticorbit-screensaver-0.1.0.tar.gz" -C "$GITHUB_WORKSPACE" .
-          cp packaging/galacticorbit-screensaver.spec "$GITHUB_WORKSPACE/rpmbuild/SPECS/"
-      - name: Build RPM and SRPM
-        run: rpmbuild --define "_topdir $GITHUB_WORKSPACE/rpmbuild" -ba "$GITHUB_WORKSPACE/rpmbuild/SPECS/galacticorbit-screensaver.spec"
-      - name: Upload EL10 packages
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: galacticorbit-el10-x86_64
-          path: |
-            ${{ github.workspace }}/rpmbuild/RPMS/x86_64/*.rpm
-            ${{ github.workspace }}/rpmbuild/SRPMS/*.src.rpm
-          if-no-files-found: error
-
   windows:
     name: Windows x64 ZIP and MSI
     runs-on: windows-2022
@@ -114,7 +83,7 @@ jobs:
     permissions:
       contents: write
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [linux, rpm-el10, windows]
+    needs: [linux, windows]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
