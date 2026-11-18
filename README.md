@@ -59,7 +59,16 @@ Packages are rebuilt from the source code in this repository and are supplied as
 
 ### Windows releases
 
-The Windows x64 ZIP and MSI packages are built by GitHub Actions. To publish a Windows release, push a version tag such as `v0.1.0` after the release-ready code is on `main`. The workflow attaches the Windows packages and generates release notes.
+Every successful push to `main` (and manual RPM workflow run) builds Windows x64 packages alongside the Enterprise Linux 10 RPM. Each automatically published GitHub Release contains the matching RPM, source RPM, portable Windows ZIP, and Windows MSI installer. Windows packages include the SDL3 runtime DLL and bundled planetary textures, so the portable ZIP can be extracted and run without a separate SDL3 installation.
+
+Windows package names include the product version from `CMakeLists.txt`, for example:
+
+```text
+galacticorbit-windows-x64-0.1.0.zip
+galacticorbit-windows-x64-0.1.0.msi
+```
+
+A failed Windows build prevents publication of the combined release, ensuring the RPM and Windows downloads represent the same source commit.
 
 ## Install on AlmaLinux 10
 
