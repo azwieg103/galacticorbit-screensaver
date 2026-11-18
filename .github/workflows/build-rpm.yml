@@ -169,7 +169,7 @@ jobs:
       - name: Read product version
         shell: pwsh
         run: |
-          $match = Select-String -Path CMakeLists.txt -Pattern 'project\\(galacticorbit-screensaver VERSION ([0-9.]+)'
+          $match = Select-String -Path CMakeLists.txt -Pattern 'project\(galacticorbit-screensaver VERSION ([0-9.]+)'
           if (!$match) { throw "Could not determine product version from CMakeLists.txt" }
           $version = $match.Matches[0].Groups[1].Value
           "PRODUCT_VERSION=$version" >> $env:GITHUB_ENV
