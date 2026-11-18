@@ -1,0 +1,196 @@
+name: Build and Publish Enterprise Linux 10 RPM
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+# Serialize publication so rebuild numbers cannot race.
+concurrency:
+  group: galacticorbit-rpm-build
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    container:
+      image: almalinux:10
+    outputs:
+      is_current: \${{ steps.freshness.outputs.is_current }}
+      rpm_version: \${{ steps.meta.outputs.version }}
+    steps:
+      - name: Install build requirements
+        run: |
+          dnf -y install epel-release dnf-plugins-core
+          dnf config-manager --set-enabled crb
+          dnf -y install \
+            gcc-c++ cmake make git tar gzip findutils \
+            rpm-build rpmdevtools SDL3-devel mesa-libGL-devel \
+            extra-cmake-modules libplasma-devel kf6-kcoreaddons-devel \
+            qt6-qtbase-devel qt6-qtdeclarative-devel qt6-qtshadertools-devel
+          dnf clean all
+
+      - name: Check out repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: \${{ github.sha }}
+          persist-credentials: false
+
+      - name: Select next ZWIEGNET rebuild number
+        id: release
+        env:
+          GH_TOKEN: \${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import re
+          import urllib.request
+
+          with open("CMakeLists.txt", encoding="utf-8") as source:
+              content = source.read()
+          match = re.search(r"project\\(galacticorbit-screensaver VERSION ([0-9.]+)", content)
+          if not match:
+              raise SystemExit("Could not determine the Galactic Orbit version.")
+          upstream_version = match.group(1)
+          prefix = f"galacticorbit-screensaver-{upstream_version}-ZWIEGNET."
+          token = os.environ["GH_TOKEN"]
+          maximum = 0
+          page = 1
+          while True:
+              url = f"https://api.github.com/repos/\${{ github.repository }}/releases?per_page=100&page={page}"
+              request = urllib.request.Request(url, headers={
+                  "Accept": "application/vnd.github+json",
+                  "Authorization": f"Bearer {token}",
+                  "X-GitHub-Api-Version": "2022-11-28",
+              })
+              with urllib.request.urlopen(request) as response:
+                  releases = json.load(response)
+              if not releases:
+                  break
+              for release in releases:
+                  tag = release.get("tag_name", "")
+                  if tag.startswith(prefix):
+                      suffix = tag[len(prefix):]
+                      number = re.fullmatch(r"([1-9][0-9]*)\\.el10", suffix)
+                      if number:
+                          maximum = max(maximum, int(number.group(1)))
+              if len(releases) < 100:
+                  break
+              page += 1
+          rebuild = maximum + 1
+          value = f"ZWIEGNET.{rebuild}.el10"
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
+              output.write(f"release={value}\\n")
+          print(f"Product version: {upstream_version}")
+          print(f"Selected RPM release: {upstream_version}-{value}")
+          PY
+
+      - name: Create source archive
+        run: |
+          mkdir -p rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+          version=$(sed -nE 's/^project\\(galacticorbit-screensaver VERSION ([0-9.]+).*/\\1/p' CMakeLists.txt)
+          test -n "$version"
+          git archive --format=tar.gz --prefix="galacticorbit-screensaver-$version/" HEAD \
+            > "rpmbuild/SOURCES/galacticorbit-screensaver-$version.tar.gz"
+          cp packaging/galacticorbit-screensaver.spec rpmbuild/SPECS/
+
+      - name: Build RPM and source RPM
+        run: |
+          rpmbuild --define "_topdir $GITHUB_WORKSPACE/rpmbuild" \
+            --define "rpm_release $RPM_RELEASE" \
+            -ba rpmbuild/SPECS/galacticorbit-screensaver.spec
+        env:
+          RPM_RELEASE: \${{ steps.release.outputs.release }}
+
+      - name: Verify package metadata
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          find rpmbuild/RPMS -type f -name '*.rpm' ! -name '*debuginfo*' ! -name '*debugsource*' -exec cp {} dist/ \\;
+          find rpmbuild/SRPMS -type f -name '*.src.rpm' -exec cp {} dist/ \\;
+          test -n "$(find dist -maxdepth 1 -type f -name '*.rpm' -print -quit)"
+          for package in dist/*.rpm; do
+            rpm -qp --qf '%{NAME} %{VERSION}-%{RELEASE} %{ARCH}\\n' "$package"
+          done
+          binary=$(find dist -maxdepth 1 -type f -name 'galacticorbit-screensaver-*.el10.x86_64.rpm' ! -name '*.src.rpm' | head -n1)
+          test -n "$binary"
+          version=$(rpm -qp --qf '%{VERSION}-%{RELEASE}' "$binary")
+          echo "RPM_VERSION=$version" >> "$GITHUB_ENV"
+
+      - name: Confirm this is still the latest main build
+        if: success()
+        id: freshness
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const ref = await github.rest.git.getRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: "heads/main"
+            });
+            const isCurrent = ref.data.object.sha === context.sha;
+            core.setOutput("is_current", String(isCurrent));
+            if (!isCurrent) core.info("Not publishing an RPM from an outdated build.");
+
+      - name: Export RPM version
+        if: steps.freshness.outputs.is_current == 'true'
+        id: meta
+        run: echo "version=$RPM_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Upload RPM artifacts
+        if: success() && steps.freshness.outputs.is_current == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: galacticorbit-el10-x86_64
+          path: dist/*.rpm
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    needs: build
+    if: needs.build.outputs.is_current == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download RPM artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: galacticorbit-el10-x86_64
+          path: dist
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: \${{ github.token }}
+          GH_REPO: \${{ github.repository }}
+          GITHUB_SHA: \${{ github.sha }}
+          RPM_VERSION: \${{ needs.build.outputs.rpm_version }}
+        run: |
+          set -euo pipefail
+          tag="galacticorbit-screensaver-$RPM_VERSION"
+          title="Galactic Orbit $RPM_VERSION (Enterprise Linux 10)"
+          notes=$(cat <<'EOF'
+          Galactic Orbit RPM packages for Enterprise Linux 10 (x86_64), built in an AlmaLinux 10 environment.
+
+          Intended for AlmaLinux 10, Red Hat Enterprise Linux 10, Oracle Linux 10, Rocky Linux 10, and CentOS Stream 10. Runtime dependency availability should be checked on each distribution.
+
+          The product version follows the version in CMakeLists.txt. The ZWIEGNET rebuild number increments for every successfully published build of the same product version. Releases contain the binary RPM and source RPM.
+
+          Packages are supplied as-is, with no warranty or support. This is a community rebuild for Enterprise Linux; it is not an official upstream release.
+          EOF
+          )
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag already exists; refusing to overwrite published artifacts."
+            exit 1
+          fi
+          gh release create "$tag" dist/*.rpm \
+            --target "$GITHUB_SHA" \
+            --title "$title" \
+            --notes "$notes" \
+            --latest
