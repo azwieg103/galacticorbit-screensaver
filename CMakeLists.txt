@@ -24,8 +24,6 @@ endif()
 install(TARGETS galacticorbit-screensaver RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(DIRECTORY assets/planet-textures DESTINATION ${CMAKE_INSTALL_DATADIR}/galacticorbit)
 
-install(DIRECTORY assets/planet-textures DESTINATION ${CMAKE_INSTALL_DATADIR}/galacticorbit)
-
 # CPack metadata is shared by the Debian and Ubuntu package jobs.
 set(CPACK_PACKAGE_NAME "galacticorbit-screensaver")
 set(CPACK_PACKAGE_VENDOR "Zwiegnet")
