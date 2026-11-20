@@ -8,8 +8,8 @@ on:
 
 # Serialize publication so rebuild numbers cannot race.
 concurrency:
-  group: galacticorbit-rpm-build
-  cancel-in-progress: false
+  group: galacticorbit-rpm-build-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
