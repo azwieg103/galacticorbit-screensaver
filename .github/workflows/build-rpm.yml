@@ -87,7 +87,7 @@ jobs:
           rebuild = maximum + 1
           value = f"ZWIEGNET.{rebuild}.el10"
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
-              output.write(f"release={value}\n")
+              output.write(f"release={value}\\n")
           print(f"Product version: {upstream_version}")
           print(f"Selected RPM release: {upstream_version}-{value}")
           PY
@@ -118,7 +118,7 @@ jobs:
           find rpmbuild/SRPMS -type f -name '*.src.rpm' -exec cp {} dist/ \;
           test -n "$(find dist -maxdepth 1 -type f -name '*.rpm' -print -quit)"
           for package in dist/*.rpm; do
-            rpm -qp --qf '%{NAME} %{VERSION}-%{RELEASE} %{ARCH}\n' "$package"
+            rpm -qp --qf '%{NAME} %{VERSION}-%{RELEASE} %{ARCH}\\n' "$package"
           done
           binary=$(find dist -maxdepth 1 -type f -name 'galacticorbit-screensaver-*.el10.x86_64.rpm' ! -name '*.src.rpm' | head -n1)
           test -n "$binary"
@@ -292,6 +292,12 @@ jobs:
           name: galacticorbit-macos-x86_64
           path: dist
 
+      - name: Download openSUSE Tumbleweed package
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: galacticorbit-opensuse-tumbleweed-x86_64
+          path: dist
+
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -307,7 +313,7 @@ jobs:
 
           Intended for AlmaLinux 10, Red Hat Enterprise Linux 10, Oracle Linux 10, Rocky Linux 10, and CentOS Stream 10. Runtime dependency availability should be checked on each distribution.
 
-          The product version follows the version in CMakeLists.txt. The ZWIEGNET rebuild number increments for every successfully published build of the same product version. Releases contain the Enterprise Linux binary/source RPMs, Windows x64 ZIP/MSI, Debian 13 and Ubuntu 26.04 DEB packages, Arch Linux x86_64 package, FreeBSD 15.1 amd64 tarball, and macOS ARM64 and Intel x86_64 ZIP packages. All packages are built from the same source commit.
+          The product version follows the version in CMakeLists.txt. The ZWIEGNET rebuild number increments for every successfully published build of the same product version. Releases contain the Enterprise Linux binary/source RPMs, Windows x64 ZIP/MSI, Debian 13 and Ubuntu 26.04 DEB packages, Arch Linux x86_64 package, FreeBSD 15.1 amd64 tarball, and macOS ARM64 and Intel x86_64 ZIP packages, and the openSUSE Tumbleweed x86_64 RPM. All packages are built from the same source commit.
 
           Packages are supplied as-is, with no warranty or support. This is a community rebuild for Enterprise Linux; it is not an official upstream release.
           EOF
