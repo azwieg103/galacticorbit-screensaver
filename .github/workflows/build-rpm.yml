@@ -87,8 +87,7 @@ jobs:
           rebuild = maximum + 1
           value = f"ZWIEGNET.{rebuild}.el10"
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
-              output.write(f"release={value}
-")
+              output.write(f"release={value}\\n")
           print(f"Product version: {upstream_version}")
           print(f"Selected RPM release: {upstream_version}-{value}")
           PY
@@ -119,8 +118,7 @@ jobs:
           find rpmbuild/SRPMS -type f -name '*.src.rpm' -exec cp {} dist/ \;
           test -n "$(find dist -maxdepth 1 -type f -name '*.rpm' -print -quit)"
           for package in dist/*.rpm; do
-            rpm -qp --qf '%{NAME} %{VERSION}-%{RELEASE} %{ARCH}
-' "$package"
+            rpm -qp --qf '%{NAME} %{VERSION}-%{RELEASE} %{ARCH}\\n' "$package"
           done
           binary=$(find dist -maxdepth 1 -type f -name 'galacticorbit-screensaver-*.el10.x86_64.rpm' ! -name '*.src.rpm' | head -n1)
           test -n "$binary"
