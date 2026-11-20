@@ -87,7 +87,8 @@ jobs:
           rebuild = maximum + 1
           value = f"ZWIEGNET.{rebuild}.el10"
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
-              output.write(f"release={value}\n")
+              output.write(f"release={value}
+")
           print(f"Product version: {upstream_version}")
           print(f"Selected RPM release: {upstream_version}-{value}")
           PY
@@ -118,7 +119,8 @@ jobs:
           find rpmbuild/SRPMS -type f -name '*.src.rpm' -exec cp {} dist/ \;
           test -n "$(find dist -maxdepth 1 -type f -name '*.rpm' -print -quit)"
           for package in dist/*.rpm; do
-            rpm -qp --qf '%{NAME} %{VERSION}-%{RELEASE} %{ARCH}\n' "$package"
+            rpm -qp --qf '%{NAME} %{VERSION}-%{RELEASE} %{ARCH}
+' "$package"
           done
           binary=$(find dist -maxdepth 1 -type f -name 'galacticorbit-screensaver-*.el10.x86_64.rpm' ! -name '*.src.rpm' | head -n1)
           test -n "$binary"
@@ -292,7 +294,13 @@ jobs:
           name: galacticorbit-macos-x86_64
           path: dist
 
-      - name: Download openSUSE Tumbleweed package\n        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0\n        with:\n          name: galacticorbit-opensuse-tumbleweed-x86_64\n          path: dist\n\n      - name: Publish GitHub release
+      - name: Download openSUSE Tumbleweed package
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: galacticorbit-opensuse-tumbleweed-x86_64
+          path: dist
+
+      - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
