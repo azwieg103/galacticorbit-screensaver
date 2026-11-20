@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+  pull_request:
 
 # Serialize publication so rebuild numbers cannot race.
 concurrency:
@@ -232,8 +233,12 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  platforms:
+    name: Build additional operating-system packages
+    uses: ./.github/workflows/build-platforms.yml
+
   publish:
-    needs: [build, windows]
+    needs: [build, windows, platforms]
     if: needs.build.outputs.is_current == 'true'
     runs-on: ubuntu-latest
     permissions:
@@ -251,6 +256,42 @@ jobs:
           name: galacticorbit-windows-x64
           path: dist
 
+      - name: Download Debian package
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: galacticorbit-debian-amd64
+          path: dist
+
+      - name: Download Ubuntu package
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: galacticorbit-ubuntu-amd64
+          path: dist
+
+      - name: Download Arch Linux package
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: galacticorbit-arch-x86_64
+          path: dist
+
+      - name: Download FreeBSD package
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: galacticorbit-freebsd-15.1-amd64
+          path: dist
+
+      - name: Download macOS ARM64 package
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: galacticorbit-macos-arm64
+          path: dist
+
+      - name: Download macOS x86_64 package
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: galacticorbit-macos-x86_64
+          path: dist
+
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -266,7 +307,7 @@ jobs:
 
           Intended for AlmaLinux 10, Red Hat Enterprise Linux 10, Oracle Linux 10, Rocky Linux 10, and CentOS Stream 10. Runtime dependency availability should be checked on each distribution.
 
-          The product version follows the version in CMakeLists.txt. The ZWIEGNET rebuild number increments for every successfully published build of the same product version. Releases contain the binary RPM, source RPM, portable Windows x64 ZIP, and Windows x64 MSI installer. All packages are built from the same source commit.
+          The product version follows the version in CMakeLists.txt. The ZWIEGNET rebuild number increments for every successfully published build of the same product version. Releases contain the Enterprise Linux binary/source RPMs, Windows x64 ZIP/MSI, Debian 13 and Ubuntu 26.04 DEB packages, Arch Linux x86_64 package, FreeBSD 15.1 amd64 tarball, and macOS ARM64 and Intel x86_64 ZIP packages. All packages are built from the same source commit.
 
           Packages are supplied as-is, with no warranty or support. This is a community rebuild for Enterprise Linux; it is not an official upstream release.
           EOF
