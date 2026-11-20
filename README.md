@@ -57,18 +57,43 @@ The RPM is built in an AlmaLinux 10 environment for x86_64 and is intended for A
 
 Packages are rebuilt from the source code in this repository and are supplied as-is, with no warranty or support. This is a community rebuild for Enterprise Linux, not an official upstream release.
 
-### Windows releases
+### Cross-platform releases
 
-Every successful push to `main` (and manual RPM workflow run) builds Windows x64 packages alongside the Enterprise Linux 10 RPM. Each automatically published GitHub Release contains the matching RPM, source RPM, portable Windows ZIP, and Windows MSI installer. Windows packages include the SDL3 runtime DLL and bundled planetary textures, so the portable ZIP can be extracted and run without a separate SDL3 installation.
+Every successful push to `main` (and manual RPM workflow run) builds all supported targets. A release is published only after every platform build succeeds, so the downloadable packages represent the same source commit.
 
-Windows package names include the product version from `CMakeLists.txt`, for example:
+| Platform | Build artifact | Architecture |
+|---|---|---|
+| Enterprise Linux 10 | RPM and source RPM | x86_64 |
+| Windows | Portable ZIP and MSI installer | x64 |
+| Debian 13 | DEB package | amd64 |
+| Ubuntu 26.04 | DEB package | amd64 |
+| Arch Linux | Pacman package (`.pkg.tar.zst`) | x86_64 |
+| FreeBSD 15.1 | Portable tar.gz package | amd64 |
+| macOS | Portable ZIP package | Apple Silicon (arm64) |
+| macOS | Portable ZIP package | Intel (x86_64) |
 
-```text
-galacticorbit-windows-x64-0.1.0.zip
-galacticorbit-windows-x64-0.1.0.msi
+Windows packages include the SDL3 runtime DLL and bundled planetary textures. The macOS ZIPs include the SDL3 dynamic library and bundled textures. The FreeBSD archive contains the installed executable and data files; install the SDL3 and OpenGL runtime packages with `pkg` before launching it.
+
+Debian and Ubuntu packages install the executable and planetary textures under standard system paths. Install them with:
+
+```bash
+sudo apt install ./galacticorbit-*.deb
 ```
 
-A failed Windows build prevents publication of the combined release, ensuring the RPM and Windows downloads represent the same source commit.
+Arch Linux packages can be installed with:
+
+```bash
+sudo pacman -U ./galacticorbit-screensaver-*.pkg.tar.zst
+```
+
+FreeBSD's portable archive can be unpacked with:
+
+```sh
+sudo tar -xzf galacticorbit-freebsd-15.1-amd64.tar.gz -C /
+pkg install sdl3 mesa-libs
+```
+
+The macOS ZIP can be extracted in Finder; run `galacticorbit-screensaver` from the extracted directory.
 
 ## Install on AlmaLinux 10
 
@@ -179,8 +204,9 @@ For normal use, prefer installing the RPM so the wallpaper package, geometry plu
 - `src/` — standalone SDL3/OpenGL renderer.
 - `assets/planet-textures/` — bundled Solar System texture maps.
 - `packaging/plasma6/` — KDE Plasma 6 wallpaper package, geometry helper, and procedural fragment shader.
-- `packaging/galacticorbit-screensaver.spec` — AlmaLinux RPM specification.
-- `.github/workflows/` — automated build workflow.
+- `packaging/galacticorbit-screensaver.spec` — Enterprise Linux RPM specification.
+- `packaging/arch/PKGBUILD` — Arch Linux package recipe.
+- `.github/workflows/` — automated cross-platform build and release workflows.
 
 ## License
 

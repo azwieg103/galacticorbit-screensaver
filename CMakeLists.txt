@@ -24,6 +24,18 @@ endif()
 install(TARGETS galacticorbit-screensaver RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(DIRECTORY assets/planet-textures DESTINATION ${CMAKE_INSTALL_DATADIR}/galacticorbit)
 
+# CPack metadata is shared by the Debian and Ubuntu package jobs.
+set(CPACK_PACKAGE_NAME "galacticorbit-screensaver")
+set(CPACK_PACKAGE_VENDOR "Zwiegnet")
+set(CPACK_PACKAGE_CONTACT "programming@zwiegnet.com")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Animated Milky Way and Solar System visualization")
+set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/azwieg103/galacticorbit-screensaver")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "Galactic Orbit")
+set(CPACK_DEBIAN_PACKAGE_SECTION "graphics")
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+include(CPack)
+
 option(GALACTICORBIT_BUILD_PLASMA6 "Build KDE Plasma 6 wallpaper integration" OFF)
 if(UNIX AND NOT APPLE AND GALACTICORBIT_BUILD_PLASMA6)
     add_subdirectory(packaging/plasma6)
