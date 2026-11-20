@@ -27,11 +27,10 @@ GLuint loadTexture(const std::string& path) {
     // current working directory. This keeps portable ZIP/tar packages usable
     // when launched from a desktop shortcut or another directory.
     if (!pixels) {
-        char* executablePath = SDL_GetBasePath();
+        const char* executablePath = SDL_GetBasePath();
         if (executablePath) {
             const std::string bundledPath = std::string(executablePath) + path;
             pixels = stbi_load(bundledPath.c_str(), &width, &height, &channels, STBI_rgb);
-            SDL_free(executablePath);
         }
     }
 
