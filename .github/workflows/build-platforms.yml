@@ -162,3 +162,39 @@ jobs:
           path: galacticorbit-macos-${{ matrix.arch }}-*.zip
           if-no-files-found: error
           retention-days: 14
+
+
+  opensuse:
+    name: openSUSE Tumbleweed RPM package
+    runs-on: ubuntu-latest
+    container:
+      image: opensuse/tumbleweed
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build dependencies
+        run: |
+          zypper --non-interactive refresh
+          zypper --non-interactive install --no-recommends cmake gcc-c++ make SDL3-devel Mesa-libGL-devel rpm-build
+      - name: Build openSUSE RPM
+        run: |
+          set -eux
+          version=$(sed -nE 's/^project\(galacticorbit-screensaver VERSION ([0-9.]+).*/\1/p' CMakeLists.txt)
+          test -n "$version"
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
+            -DCPACK_GENERATOR=RPM \
+            -DCPACK_RPM_PACKAGE_LICENSE=GPL-3.0-only \
+            -DCPACK_RPM_PACKAGE_GROUP=Productivity/Graphics
+          cmake --build build --parallel 2
+          mkdir -p dist
+          cpack --config build/CPackConfig.cmake -G RPM -B dist
+          package=$(find dist -maxdepth 1 -type f -name '*.rpm' -print -quit)
+          test -n "$package"
+          mv "$package" "dist/galacticorbit-opensuse-tumbleweed-${version}-x86_64.rpm"
+          rpm -qp --qf '%{NAME} %{VERSION}-%{RELEASE} %{ARCH}\n' dist/*.rpm
+          rpm -qp --requires dist/*.rpm
+      - uses: actions/upload-artifact@v4
+        with:
+          name: galacticorbit-opensuse-tumbleweed-x86_64
+          path: dist/*.rpm
+          if-no-files-found: error
+          retention-days: 14
