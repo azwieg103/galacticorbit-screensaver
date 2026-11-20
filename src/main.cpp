@@ -22,6 +22,19 @@ GLuint loadTexture(const std::string& path) {
     int width = 0, height = 0, channels = 0;
     stbi_set_flip_vertically_on_load(1);
     stbi_uc* pixels = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb);
+
+    // Resolve bundled assets relative to the executable as well as the
+    // current working directory. This keeps portable ZIP/tar packages usable
+    // when launched from a desktop shortcut or another directory.
+    if (!pixels) {
+        char* executablePath = SDL_GetBasePath();
+        if (executablePath) {
+            const std::string bundledPath = std::string(executablePath) + path;
+            pixels = stbi_load(bundledPath.c_str(), &width, &height, &channels, STBI_rgb);
+            SDL_free(executablePath);
+        }
+    }
+
 #ifdef GALACTICORBIT_DATA_DIR
     if (!pixels) {
         const auto marker = path.find("planet-textures/");
