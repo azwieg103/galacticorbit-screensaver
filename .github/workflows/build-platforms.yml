@@ -25,7 +25,7 @@ jobs:
           test -n "$version"
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
             -DCPACK_GENERATOR=DEB \
-            -DCPACK_PACKAGE_FILE_NAME="galacticorbit-debian-\${version}-amd64" \
+            -DCPACK_PACKAGE_FILE_NAME="galacticorbit-debian-${version}-amd64" \
             -DCPACK_DEBIAN_PACKAGE_SHLIBDEPS=ON
           cmake --build build --parallel 2
           mkdir -p dist
@@ -56,7 +56,7 @@ jobs:
           test -n "$version"
           cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
             -DCPACK_GENERATOR=DEB \
-            -DCPACK_PACKAGE_FILE_NAME="galacticorbit-ubuntu-\${version}-amd64" \
+            -DCPACK_PACKAGE_FILE_NAME="galacticorbit-ubuntu-${version}-amd64" \
             -DCPACK_DEBIAN_PACKAGE_SHLIBDEPS=ON
           cmake --build build --parallel 2
           mkdir -p dist
@@ -86,7 +86,7 @@ jobs:
           test -n "$version"
           sed -i "s/^pkgver=.*/pkgver=$version/" packaging/arch/PKGBUILD
           mkdir -p packaging/arch/dist
-          git archive --format=tar.gz --prefix="galacticorbit-screensaver-\${version}/" HEAD > "packaging/arch/galacticorbit-screensaver-\${version}.tar.gz"
+          git archive --format=tar.gz --prefix="galacticorbit-screensaver-${version}/" HEAD > "packaging/arch/galacticorbit-screensaver-${version}.tar.gz"
           useradd --create-home builder
           chown -R builder:builder "$GITHUB_WORKSPACE"
           su builder -c "cd '$GITHUB_WORKSPACE/packaging/arch' && makepkg --nodeps --noconfirm --cleanbuild"
@@ -124,8 +124,8 @@ jobs:
           retention-days: 14
 
   macos:
-    name: macOS \${{ matrix.arch }} build
-    runs-on: \${{ matrix.runner }}
+    name: macOS ${{ matrix.arch }} build
+    runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
       matrix:
@@ -153,12 +153,12 @@ jobs:
           install_name_tool -change "$sdl_dependency" "@executable_path/lib/libSDL3.dylib" dist/macos/galacticorbit-screensaver
           install_name_tool -id "@rpath/libSDL3.dylib" dist/macos/lib/libSDL3.dylib
           install_name_tool -add_rpath "@executable_path/lib" dist/macos/galacticorbit-screensaver
-          printf '%s\n' "Galactic Orbit $version for macOS (\${{ matrix.arch }})" "Run ./galacticorbit-screensaver from this directory." "Requires macOS with OpenGL support." > dist/macos/README.txt
+          printf '%s\n' "Galactic Orbit $version for macOS (${{ matrix.arch }})" "Run ./galacticorbit-screensaver from this directory." "Requires macOS with OpenGL support." > dist/macos/README.txt
           chmod +x dist/macos/galacticorbit-screensaver
-          ditto -c -k --sequesterRsrc --keepParent dist/macos "galacticorbit-macos-\${{ matrix.arch }}-\${version}.zip"
+          ditto -c -k --sequesterRsrc --keepParent dist/macos "galacticorbit-macos-${{ matrix.arch }}-${version}.zip"
       - uses: actions/upload-artifact@v4
         with:
-          name: galacticorbit-macos-\${{ matrix.arch }}
-          path: galacticorbit-macos-\${{ matrix.arch }}-*.zip
+          name: galacticorbit-macos-${{ matrix.arch }}
+          path: galacticorbit-macos-${{ matrix.arch }}-*.zip
           if-no-files-found: error
           retention-days: 14
