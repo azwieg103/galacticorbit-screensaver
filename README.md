@@ -70,7 +70,7 @@ Every successful push to `main` (and manual RPM workflow run) builds all support
 | Arch Linux | Pacman package (`.pkg.tar.zst`) | x86_64 |
 | FreeBSD 15.1 | Portable tar.gz package | amd64 |
 | macOS | Portable ZIP package | Apple Silicon (arm64) |
-| macOS | Portable ZIP package | Intel (x86_64) |
+| macOS | Portable ZIP package | Intel (x86_64) |\n| openSUSE Tumbleweed | RPM package (standalone renderer) | x86_64 |
 
 Windows packages include the SDL3 runtime DLL and bundled planetary textures. The macOS ZIPs include the SDL3 dynamic library and bundled textures. The FreeBSD archive contains the installed executable and data files; install the SDL3 and OpenGL runtime packages with `pkg` before launching it.
 
@@ -86,7 +86,7 @@ Arch Linux packages can be installed with:
 sudo pacman -U ./galacticorbit-screensaver-*.pkg.tar.zst
 ```
 
-FreeBSD's portable archive can be unpacked with:
+openSUSE Tumbleweed RPM packages can be installed with:\n\n```bash\nsudo zypper install ./galacticorbit-opensuse-tumbleweed-*-x86_64.rpm\n```\n\nThe openSUSE package currently targets Tumbleweed x86_64 and includes the standalone SDL3/OpenGL renderer and planetary textures. It does not include the KDE Plasma 6 wallpaper integration.\n\nFreeBSD's portable archive can be unpacked with:
 
 ```sh
 sudo tar -xzf galacticorbit-freebsd-15.1-amd64.tar.gz -C /
