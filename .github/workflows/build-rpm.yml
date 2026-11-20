@@ -157,6 +157,8 @@ jobs:
   windows:
     name: Build Windows x64 ZIP and MSI
     runs-on: windows-2022
+    env:
+      VCPKG_ROOT: C:/vcpkg
     permissions:
       contents: read
     steps:
