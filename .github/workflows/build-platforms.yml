@@ -1,0 +1,164 @@
+name: Cross-platform builds
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  debian:
+    name: Debian 13 package
+    runs-on: ubuntu-latest
+    container:
+      image: debian:trixie
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build dependencies
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends cmake g++ make libsdl3-dev libgl-dev dpkg-dev file
+      - name: Build Debian package
+        run: |
+          set -eux
+          version=$(sed -nE 's/^project\(galacticorbit-screensaver VERSION ([0-9.]+).*/\1/p' CMakeLists.txt)
+          test -n "$version"
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
+            -DCPACK_GENERATOR=DEB \
+            -DCPACK_PACKAGE_FILE_NAME="galacticorbit-debian-\${version}-amd64" \
+            -DCPACK_DEBIAN_PACKAGE_SHLIBDEPS=ON
+          cmake --build build --parallel 2
+          mkdir -p dist
+          cpack --config build/CPackConfig.cmake -G DEB -B dist
+          dpkg-deb --info dist/*.deb
+      - uses: actions/upload-artifact@v4
+        with:
+          name: galacticorbit-debian-amd64
+          path: dist/*.deb
+          if-no-files-found: error
+          retention-days: 14
+
+  ubuntu:
+    name: Ubuntu 26.04 package
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:26.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build dependencies
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends cmake g++ make libsdl3-dev libgl-dev dpkg-dev file
+      - name: Build Ubuntu package
+        run: |
+          set -eux
+          version=$(sed -nE 's/^project\(galacticorbit-screensaver VERSION ([0-9.]+).*/\1/p' CMakeLists.txt)
+          test -n "$version"
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr \
+            -DCPACK_GENERATOR=DEB \
+            -DCPACK_PACKAGE_FILE_NAME="galacticorbit-ubuntu-\${version}-amd64" \
+            -DCPACK_DEBIAN_PACKAGE_SHLIBDEPS=ON
+          cmake --build build --parallel 2
+          mkdir -p dist
+          cpack --config build/CPackConfig.cmake -G DEB -B dist
+          dpkg-deb --info dist/*.deb
+      - uses: actions/upload-artifact@v4
+        with:
+          name: galacticorbit-ubuntu-amd64
+          path: dist/*.deb
+          if-no-files-found: error
+          retention-days: 14
+
+  arch:
+    name: Arch Linux package
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:base-devel
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build dependencies
+        run: |
+          pacman -Syu --noconfirm --needed cmake sdl3 mesa pkgconf git
+      - name: Build Arch package
+        run: |
+          set -eux
+          version=$(sed -nE 's/^project\(galacticorbit-screensaver VERSION ([0-9.]+).*/\1/p' CMakeLists.txt)
+          test -n "$version"
+          sed -i "s/^pkgver=.*/pkgver=$version/" packaging/arch/PKGBUILD
+          mkdir -p packaging/arch/dist
+          git archive --format=tar.gz --prefix="galacticorbit-screensaver-\${version}/" HEAD > "packaging/arch/galacticorbit-screensaver-\${version}.tar.gz"
+          useradd --create-home builder
+          chown -R builder:builder "$GITHUB_WORKSPACE"
+          su builder -c "cd '$GITHUB_WORKSPACE/packaging/arch' && makepkg --nodeps --noconfirm --cleanbuild"
+          mv packaging/arch/*.pkg.tar.zst packaging/arch/dist/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: galacticorbit-arch-x86_64
+          path: packaging/arch/dist/*.pkg.tar.zst
+          if-no-files-found: error
+          retention-days: 14
+
+  freebsd:
+    name: FreeBSD 15.1 amd64 build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build in a native FreeBSD virtual machine
+        uses: vmactions/freebsd-vm@v1
+        with:
+          release: "15.1"
+          prepare: |
+            pkg install -y cmake sdl3 pkgconf mesa-libs
+          run: |
+            set -eu
+            cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local
+            cmake --build build --parallel "$(sysctl -n hw.ncpu)"
+            mkdir -p dist/freebsd
+            DESTDIR="$PWD/dist/freebsd" cmake --install build
+            tar -czf galacticorbit-freebsd-15.1-amd64.tar.gz -C dist/freebsd .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: galacticorbit-freebsd-15.1-amd64
+          path: galacticorbit-freebsd-15.1-amd64.tar.gz
+          if-no-files-found: error
+          retention-days: 14
+
+  macos:
+    name: macOS \${{ matrix.arch }} build
+    runs-on: \${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-14
+            arch: arm64
+          - runner: macos-15-intel
+            arch: x86_64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install SDL3
+        run: brew install sdl3 cmake
+      - name: Build portable macOS package
+        run: |
+          set -eux
+          version=$(sed -nE 's/^project\(galacticorbit-screensaver VERSION ([0-9.]+).*/\1/p' CMakeLists.txt)
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$(brew --prefix sdl3)" -DCMAKE_INSTALL_PREFIX=/usr/local
+          cmake --build build --parallel
+          mkdir -p "dist/macos/assets/planet-textures" "dist/macos/lib"
+          cp build/galacticorbit-screensaver dist/macos/
+          cp assets/planet-textures/* dist/macos/assets/planet-textures/
+          cp "$(brew --prefix sdl3)/lib/libSDL3.dylib" dist/macos/lib/
+          sdl_dependency=$(otool -L dist/macos/galacticorbit-screensaver | awk '/libSDL3/{print $1; exit}')
+          test -n "$sdl_dependency"
+          install_name_tool -change "$sdl_dependency" "@executable_path/lib/libSDL3.dylib" dist/macos/galacticorbit-screensaver
+          install_name_tool -id "@rpath/libSDL3.dylib" dist/macos/lib/libSDL3.dylib
+          install_name_tool -add_rpath "@executable_path/lib" dist/macos/galacticorbit-screensaver
+          printf '%s\n' "Galactic Orbit $version for macOS (\${{ matrix.arch }})" "Run ./galacticorbit-screensaver from this directory." "Requires macOS with OpenGL support." > dist/macos/README.txt
+          chmod +x dist/macos/galacticorbit-screensaver
+          ditto -c -k --sequesterRsrc --keepParent dist/macos "galacticorbit-macos-\${{ matrix.arch }}-\${version}.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: galacticorbit-macos-\${{ matrix.arch }}
+          path: galacticorbit-macos-\${{ matrix.arch }}-*.zip
+          if-no-files-found: error
+          retention-days: 14
